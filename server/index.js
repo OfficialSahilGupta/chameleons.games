@@ -40,9 +40,12 @@ const io = new Server(server, {
 });
 
 const roomService = require('./services/RoomService');
+const gameEngine = require('./services/GameEngine');
 
 // Socket auth middleware
 io.use(socketAuthMiddleware);
+
+const engine = gameEngine.init(io);
 
 const broadcastRooms = async () => {
   const rooms = await roomService.getAllRooms();
@@ -58,7 +61,6 @@ io.on('connection', (socket) => {
   socket.on('rooms:create', async (roomData, callback) => {
     try {
       const room = await roomService.createRoom(socket.user.id, roomData);
-      // Join the socket room
       socket.join(`room:${room.code}`);
       broadcastRooms();
       if (callback) callback({ success: true, roomCode: room.code });
@@ -92,7 +94,6 @@ io.on('connection', (socket) => {
   socket.on('room:get', async ({ code }, callback) => {
     try {
       const room = await roomService.getRoomByCode(code);
-      // Join the socket room if they haven't already (e.g. page refresh)
       socket.join(`room:${code}`);
       if (callback) callback({ success: true, room });
     } catch (err) {
@@ -104,7 +105,7 @@ io.on('connection', (socket) => {
     try {
       await roomService.updateRoomSettings(code, socket.user.id, settings);
       emitRoomState(code);
-      broadcastRooms(); // Update lobby
+      broadcastRooms();
       if (callback) callback({ success: true });
     } catch (err) {
       if (callback) callback({ success: false, message: err.message });
@@ -125,16 +126,25 @@ io.on('connection', (socket) => {
     try {
       await roomService.startGame(code, socket.user.id);
       emitRoomState(code);
-      broadcastRooms(); // Update lobby
+      broadcastRooms();
+      await engine.initializeGame(code); // Start engine
       if (callback) callback({ success: true });
     } catch (err) {
       if (callback) callback({ success: false, message: err.message });
     }
   });
 
+  // GAME ENGINE EVENTS
+  socket.on('game:clue:submit', ({ code, text }) => {
+    engine.handleClueSubmit(code, socket.user.id, text);
+  });
+
+  socket.on('game:vote:submit', ({ code, votedForId }) => {
+    engine.handleVote(code, socket.user.id, votedForId);
+  });
+
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
-    // Handle player disconnect from active rooms later...
   });
 });
 

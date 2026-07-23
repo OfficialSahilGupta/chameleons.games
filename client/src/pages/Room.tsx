@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
+import GameUI from '../components/GameUI';
 
 export default function Room() {
   const { code } = useParams();
@@ -118,9 +119,12 @@ export default function Room() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Players List */}
-          <div className="md:col-span-2 bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
+        {room.status !== 'lobby' ? (
+          <GameUI socket={socket} code={code as string} user={user} room={room} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Players List */}
+            <div className="md:col-span-2 bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
             <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
               <h2 className="text-2xl font-bold">Players <span className="text-gray-400 text-lg font-normal">({room.players.length}/{room.settings.maxPlayers})</span></h2>
               {!isHost && room.status === 'lobby' && (
@@ -269,6 +273,7 @@ export default function Room() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );
