@@ -112,6 +112,20 @@ class RoomService {
     room.currentRound = 1;
     return room.save();
   }
+
+  async resetRoom(code, hostId) {
+    const room = await this.getRoomByCode(code);
+    if (!room) throw new Error('Room not found');
+    if (room.hostId._id.toString() !== hostId.toString()) throw new Error('Only the host can reset the room');
+
+    room.status = 'lobby';
+    room.currentRound = 0;
+    room.players.forEach(p => {
+      p.isReady = false;
+    });
+
+    return room.save();
+  }
 }
 
 module.exports = new RoomService();

@@ -15,6 +15,7 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   const [guessInput, setGuessInput] = useState('');
   const [myVote, setMyVote] = useState<string | null>(null);
   const [hasSubmittedClue, setHasSubmittedClue] = useState(false);
+  const isHost = room.hostId._id === user.id;
   const [chameleonPeek, setChameleonPeek] = useState<{fromUserId: string, text: string} | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [clueFeed, setClueFeed] = useState<any[]>([]);
@@ -110,8 +111,60 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
     socket?.emit('game:chameleonGuess', { code, guess: guessInput });
   };
 
+  const handlePlayAgain = () => {
+    socket?.emit('room:playAgain', { code });
+  };
+
   if (!gameState) {
     return <div className="text-center mt-20 text-xl animate-pulse">Initializing Game Engine...</div>;
+  }
+
+  // Handle Game Over differently, as it's the end of the session
+  if (gameState.phase === 'game_over') {
+    return (
+      <div className="max-w-4xl mx-auto mt-8 bg-gray-800 rounded-xl p-12 border border-gray-700 shadow-2xl text-center flex flex-col gap-8">
+        <h2 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Game Over!</h2>
+        
+        <div className="bg-gray-900 rounded-2xl p-8 max-w-2xl mx-auto w-full shadow-inner border border-gray-700">
+          <h3 className="text-2xl font-bold mb-6 text-gray-300 uppercase tracking-widest border-b border-gray-800 pb-4">Final Leaderboard</h3>
+          <div className="flex flex-col gap-4">
+            {[...gameState.players].sort((a:any, b:any) => b.score - a.score).map((p: any, idx: number) => (
+              <div key={p.id} className="flex items-center justify-between bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${idx === 0 ? 'bg-yellow-500 text-black' : idx === 1 ? 'bg-gray-300 text-black' : idx === 2 ? 'bg-orange-400 text-black' : 'bg-gray-700 text-white'}`}>
+                    {idx + 1}
+                  </div>
+                  <span className="text-xl font-semibold">{p.username} {p.id === user.id && <span className="text-sm text-gray-400 ml-2">(You)</span>}</span>
+                </div>
+                <div className="text-3xl font-black text-blue-400">{p.score} <span className="text-sm text-gray-500 font-normal">pts</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-6 mt-4">
+          <button 
+            onClick={() => window.location.href = '/lobby'}
+            className="px-8 py-4 rounded-xl font-bold text-lg bg-gray-700 hover:bg-gray-600 transition shadow-lg"
+          >
+            Back to Lobby
+          </button>
+          
+          {isHost ? (
+            <button 
+              onClick={handlePlayAgain}
+              className="px-8 py-4 rounded-xl font-bold text-lg bg-green-600 hover:bg-green-500 transition shadow-lg"
+            >
+              Play Again (Reset Room)
+            </button>
+          ) : (
+            <div className="px-8 py-4 rounded-xl font-bold text-lg bg-gray-800 text-gray-500 border border-gray-700 shadow-inner">
+              Waiting for Host to reset...
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (

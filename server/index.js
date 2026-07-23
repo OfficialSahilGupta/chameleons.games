@@ -137,6 +137,17 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('room:playAgain', async ({ code }, callback) => {
+    try {
+      await roomService.resetRoom(code, socket.user.id);
+      emitRoomState(code);
+      broadcastRooms();
+      if (callback) callback({ success: true });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
   // GAME ENGINE EVENTS
   socket.on('game:clue:submit', ({ code, text }) => {
     engine.handleClueSubmit(code, socket.user.id, text);

@@ -376,9 +376,15 @@ class GameEngine {
     if (!game) return;
 
     await Room.findByIdAndUpdate(game.roomId, { status: 'finished' });
-    ACTIVE_GAMES.delete(roomCode);
     
-    this.io.to(`room:${roomCode}`).emit('game:finished');
+    // Broadcast final state before cleaning up
+    game.phase = 'game_over';
+    this.broadcastState(roomCode, game);
+
+    // Keep it in ACTIVE_GAMES so the frontend can still view the score?
+    // We should delete it when room is reset to lobby.
+    // For now, let's keep it until Play Again is clicked (which restarts game engine).
+    // Actually, `initializeGame` will overwrite it anyway.
   }
 
   broadcastState(roomCode, game, extraPayload = {}) {
