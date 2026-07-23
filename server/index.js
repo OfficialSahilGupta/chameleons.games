@@ -146,6 +146,14 @@ io.on('connection', (socket) => {
     engine.handleVote(code, socket.user.id, votedForId);
   });
 
+  socket.on('game:callVote', ({ code }) => {
+    engine.callVote(code, socket.user.id);
+  });
+
+  socket.on('game:chameleonGuess', ({ code, guess }) => {
+    engine.handleChameleonGuess(code, socket.user.id, guess);
+  });
+
   // CHAT EVENTS
   socket.on('chat:history', async ({ code }, callback) => {
     try {

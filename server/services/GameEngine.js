@@ -14,15 +14,20 @@ class GameEngine {
     const room = await Room.findOne({ code: roomCode }).populate('players.userId');
     if (!room) throw new Error('Room not found');
 
+    // Check if game already running
+    if (ACTIVE_GAMES.has(roomCode)) return;
+
+    // Initialize scores if not present
+    const playersWithScores = room.players.map(p => ({
+      id: p.userId._id.toString(),
+      username: p.userId.username,
+      score: 0
+    }));
+
     const gameState = {
       code: roomCode,
       roomId: room._id,
-      players: room.players.map(p => ({
-        id: p.userId._id.toString(),
-        username: p.userId.username,
-        socketId: p.socketId,
-        score: p.score
-      })),
+      players: playersWithScores,
       settings: room.settings,
       currentRoundNumber: 1,
       chameleonId: null,
@@ -208,6 +213,15 @@ class GameEngine {
     }, duration);
   }
 
+  callVote(roomCode, userId) {
+    const game = ACTIVE_GAMES.get(roomCode);
+    if (!game || game.phase !== 'discussion') return;
+    
+    clearTimeout(game.timerTimeout);
+    chatService.addSystemMessage(roomCode, 'A vote has been called early!');
+    this.startVoting(roomCode);
+  }
+
   startVoting(roomCode) {
     const game = ACTIVE_GAMES.get(roomCode);
     if (!game) return;
@@ -228,10 +242,17 @@ class GameEngine {
     const game = ACTIVE_GAMES.get(roomCode);
     if (!game || game.phase !== 'voting') return;
 
+    // A player cannot vote for themselves
+    if (voterId === votedForId) return;
+
     const existingVote = game.votes.find(v => v.voterId === voterId);
     if (existingVote) return;
 
     game.votes.push({ voterId, votedForId });
+    
+    if (this.io) {
+      this.io.to(`room:${roomCode}`).emit('vote:submitted', { userId: voterId });
+    }
 
     if (game.votes.length === game.players.length) {
       clearTimeout(game.timerTimeout);
@@ -268,6 +289,64 @@ class GameEngine {
 
     await chatService.addSystemMessage(roomCode, `${eliminatedUsername} was eliminated! They were ${isChameleonEliminated ? 'the Chameleon' : 'an innocent Villager'}.`);
 
+    if (isChameleonEliminated) {
+      game.phase = 'chameleon_guess';
+      chatService.addSystemMessage(roomCode, `The Chameleon has one chance to guess the secret word!`);
+      
+      this.broadcastState(roomCode, game, { eliminatedId, isChameleonEliminated, endsAt: Date.now() + 20000 });
+      
+      game.timerTimeout = setTimeout(() => {
+        this.endRound(roomCode, eliminatedId, false); // Failed guess
+      }, 20000);
+      
+    } else {
+      // Innocent eliminated -> Chameleon wins round
+      chatService.addSystemMessage(roomCode, `The Chameleon is still among you...`);
+      this.endRound(roomCode, eliminatedId, null);
+    }
+  }
+
+  handleChameleonGuess(roomCode, userId, guess) {
+    const game = ACTIVE_GAMES.get(roomCode);
+    if (!game || game.phase !== 'chameleon_guess') return;
+    if (userId !== game.chameleonId) return;
+
+    clearTimeout(game.timerTimeout);
+    const correct = guess.trim().toLowerCase() === game.secretWord.trim().toLowerCase();
+    
+    chatService.addSystemMessage(roomCode, `The Chameleon guessed: ${guess}... ${correct ? 'CORRECT!' : 'WRONG!'}`);
+    this.endRound(roomCode, game.chameleonId, correct);
+  }
+
+  async endRound(roomCode, eliminatedId, chameleonGuessedCorrectly) {
+    const game = ACTIVE_GAMES.get(roomCode);
+    if (!game) return;
+
+    const isChameleonEliminated = eliminatedId === game.chameleonId;
+    
+    // Scoring logic
+    if (isChameleonEliminated) {
+      if (chameleonGuessedCorrectly) {
+        // Chameleon caught, but guessed word -> +3 points
+        game.players.forEach(p => {
+          if (p.id === game.chameleonId) p.score += 3;
+        });
+      } else {
+        // Chameleon caught, failed guess -> +1 for villagers who voted for chameleon
+        game.votes.forEach(v => {
+          if (v.votedForId === game.chameleonId && v.voterId !== game.chameleonId) {
+            const villager = game.players.find(p => p.id === v.voterId);
+            if (villager) villager.score += 1;
+          }
+        });
+      }
+    } else {
+      // Innocent eliminated -> Chameleon survived -> +2 points
+      game.players.forEach(p => {
+        if (p.id === game.chameleonId) p.score += 2;
+      });
+    }
+
     game.phase = 'reveal';
     
     // Update round
@@ -275,11 +354,11 @@ class GameEngine {
       votes: game.votes,
       eliminatedUserId: eliminatedId,
       eliminatedWasChameleon: isChameleonEliminated,
-      outcome: isChameleonEliminated ? 'chameleon_caught' : 'chameleon_escaped',
+      outcome: isChameleonEliminated ? (chameleonGuessedCorrectly ? 'chameleon_caught_but_guessed' : 'chameleon_caught') : 'chameleon_escaped',
       endedAt: new Date()
     });
 
-    this.broadcastState(roomCode, game, { eliminatedId, isChameleonEliminated });
+    this.broadcastState(roomCode, game, { eliminatedId, isChameleonEliminated, chameleonGuessedCorrectly });
 
     // Move to next round or end game after delay
     setTimeout(() => {

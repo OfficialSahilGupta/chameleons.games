@@ -12,6 +12,8 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   const [gameState, setGameState] = useState<any>(null);
   const [myRoleData, setMyRoleData] = useState<{ category: string, word: string | null, isChameleon: boolean } | null>(null);
   const [clueInput, setClueInput] = useState('');
+  const [guessInput, setGuessInput] = useState('');
+  const [myVote, setMyVote] = useState<string | null>(null);
   const [hasSubmittedClue, setHasSubmittedClue] = useState(false);
   const [chameleonPeek, setChameleonPeek] = useState<{fromUserId: string, text: string} | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -33,10 +35,17 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
       // Reset phase specific state
       if (state.phase === 'assigning_roles') {
         setClueInput('');
+        setGuessInput('');
+        setMyVote(null);
         setHasSubmittedClue(false);
         setChameleonPeek(null);
         setClueFeed([]);
         setSubmittedPlayers(new Set());
+      }
+      
+      if (state.phase === 'discussion') {
+        setSubmittedPlayers(new Set()); // Reset for voting
+        setMyVote(null);
       }
     });
 
@@ -53,11 +62,11 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
     });
 
     socket.on('clue:submitted', (data) => {
-      setSubmittedPlayers(prev => {
-        const newSet = new Set(prev);
-        newSet.add(data.userId);
-        return newSet;
-      });
+      setSubmittedPlayers(prev => new Set(prev).add(data.userId));
+    });
+
+    socket.on('vote:submitted', (data) => {
+      setSubmittedPlayers(prev => new Set(prev).add(data.userId));
     });
 
     return () => {
@@ -66,6 +75,7 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
       socket.off('clue:peek');
       socket.off('clue:feed');
       socket.off('clue:submitted');
+      socket.off('vote:submitted');
     };
   }, [socket]);
 
@@ -85,7 +95,19 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   };
 
   const submitVote = (votedForId: string) => {
+    if (myVote) return;
+    setMyVote(votedForId);
     socket?.emit('game:vote:submit', { code, votedForId });
+  };
+
+  const callVote = () => {
+    socket?.emit('game:callVote', { code });
+  };
+
+  const submitGuess = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guessInput) return;
+    socket?.emit('game:chameleonGuess', { code, guess: guessInput });
   };
 
   if (!gameState) {
@@ -228,9 +250,15 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
 
       {gameState.phase === 'discussion' && (
         <div className="flex flex-col gap-6">
-          <div className="text-center">
+          <div className="text-center relative">
             <h3 className="text-2xl font-bold mb-2">Discussion Phase</h3>
             <p className="text-gray-400">Review the clues and find the Chameleon!</p>
+            <button 
+              onClick={callVote}
+              className="absolute right-0 top-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition shadow-md"
+            >
+              Call a Vote Early
+            </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {gameState.fullClues?.map((c: any) => {
@@ -251,32 +279,119 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
           <h3 className="text-3xl font-bold text-red-500 mb-2">Vote!</h3>
           <p className="text-gray-400 mb-6">Who is the Chameleon?</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {gameState.players.filter((p:any) => p.id !== user.id).map((p: any) => (
-              <button 
-                key={p.id}
-                onClick={() => submitVote(p.id)}
-                className="bg-gray-700 hover:bg-red-600 p-4 rounded-xl border border-gray-600 transition flex flex-col items-center gap-2"
-              >
-                <span className="font-bold">{p.username}</span>
-              </button>
-            ))}
+            {gameState.players.map((p: any) => {
+              if (p.id === user.id) return null; // Don't vote for self
+              const hasVoted = submittedPlayers.has(p.id);
+              const isMyVote = myVote === p.id;
+              
+              return (
+                <button 
+                  key={p.id}
+                  onClick={() => submitVote(p.id)}
+                  disabled={myVote !== null}
+                  className={`p-4 rounded-xl border transition flex flex-col items-center gap-2 ${
+                    isMyVote ? 'bg-red-600 border-red-400 shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 
+                    myVote ? 'bg-gray-800 border-gray-700 opacity-50 cursor-not-allowed' :
+                    'bg-gray-700 hover:bg-gray-600 border-gray-600'
+                  }`}
+                >
+                  <div className="relative">
+                    <img 
+                      src={p.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`} 
+                      alt="avatar" 
+                      className={`w-16 h-16 rounded-full bg-gray-800 ${hasVoted ? 'border-2 border-green-500' : ''}`}
+                    />
+                    {hasVoted && (
+                      <div className="absolute -bottom-2 -right-2 bg-gray-900 rounded-full w-6 h-6 flex items-center justify-center border border-green-500 text-xs shadow-md">
+                        ✅
+                      </div>
+                    )}
+                  </div>
+                  <span className="font-bold mt-2">{p.username}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {gameState.phase === 'chameleon_guess' && (
+        <div className="text-center py-12 flex flex-col gap-6">
+          <h3 className="text-4xl font-bold text-red-500">The Chameleon was caught!</h3>
+          <p className="text-gray-300 text-lg">But wait... they have one chance to guess the secret word and steal the points.</p>
+          
+          <div className="bg-gray-900 p-8 rounded-xl border border-gray-700 inline-block mx-auto min-w-[300px]">
+            {myRoleData?.isChameleon ? (
+              <form onSubmit={submitGuess} className="flex flex-col gap-4">
+                <label className="font-bold text-xl text-white">What is the secret word?</label>
+                <div className="text-sm text-gray-400 mb-2">Category: <span className="text-blue-400 font-bold">{gameState.category}</span></div>
+                <input 
+                  type="text" 
+                  value={guessInput}
+                  onChange={e => setGuessInput(e.target.value)}
+                  placeholder="Type your guess..."
+                  className="p-4 rounded-lg bg-gray-800 border border-gray-500 focus:outline-none focus:border-red-500 text-lg shadow-inner text-center"
+                  maxLength={50}
+                  required
+                />
+                <button type="submit" className="bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold text-lg shadow-md transition mt-2">
+                  Submit Guess
+                </button>
+              </form>
+            ) : (
+              <div className="animate-pulse">
+                <div className="text-4xl mb-4">🙈</div>
+                <div className="font-bold text-xl text-yellow-500">The Chameleon is guessing...</div>
+                <div className="text-gray-500 mt-2 text-sm">Hold your breath!</div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {gameState.phase === 'reveal' && (
         <div className="text-center py-12 flex flex-col gap-6">
-          <h3 className="text-4xl font-bold mb-2">Round Over</h3>
-          <div className="bg-gray-900 p-8 rounded-xl border border-gray-700 inline-block mx-auto">
+          <h3 className="text-5xl font-bold mb-2">Round Over</h3>
+          <div className="bg-gray-900 p-8 rounded-xl border border-gray-700 inline-block mx-auto min-w-[400px]">
             {gameState.isChameleonEliminated ? (
-              <div className="text-green-400 text-2xl font-bold">The Villagers Win!</div>
+              <div className="flex flex-col gap-4">
+                <div className="text-green-400 text-3xl font-bold">The Villagers caught the Chameleon!</div>
+                {gameState.chameleonGuessedCorrectly === true && (
+                  <div className="text-red-400 text-xl font-bold mt-2 border-t border-gray-700 pt-4">
+                    ...but the Chameleon correctly guessed the word!
+                  </div>
+                )}
+                {gameState.chameleonGuessedCorrectly === false && (
+                  <div className="text-blue-400 text-xl font-bold mt-2 border-t border-gray-700 pt-4">
+                    ...and the Chameleon failed to guess the word!
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="text-red-500 text-2xl font-bold">The Chameleon Escaped!</div>
+              <div className="flex flex-col gap-4">
+                <div className="text-red-500 text-3xl font-bold">The Chameleon Escaped!</div>
+                <div className="text-gray-400 text-lg border-t border-gray-700 pt-4">
+                  An innocent villager was eliminated.
+                </div>
+              </div>
             )}
-            <p className="mt-4 text-gray-300">
-              The eliminated player was {gameState.isChameleonEliminated ? 'the Chameleon' : 'an innocent Villager'}.
-            </p>
           </div>
+          
+          <div className="mt-8 bg-gray-800 rounded-xl p-6 border border-gray-700 max-w-lg mx-auto w-full">
+            <h4 className="text-xl font-bold mb-4 text-gray-300">Scores</h4>
+            <div className="space-y-3">
+              {[...gameState.players].sort((a:any, b:any) => b.score - a.score).map((p: any) => (
+                <div key={p.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-lg">
+                  <span className="font-bold flex items-center gap-2">
+                    {p.id === gameState.chameleonId && <span title="Chameleon">🦎</span>}
+                    {p.username}
+                  </span>
+                  <span className="text-2xl font-black text-yellow-500">{p.score}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <p className="text-gray-500 mt-4 animate-pulse">Waiting for the next round...</p>
         </div>
       )}
