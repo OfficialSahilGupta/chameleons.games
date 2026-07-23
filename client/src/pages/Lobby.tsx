@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
+import RoomSettingsModal from '../components/RoomSettingsModal';
 
 export default function Lobby() {
   const { user, token, logout } = useAuthStore();
@@ -48,11 +49,13 @@ export default function Lobby() {
     navigate('/');
   };
 
-  const createRoom = () => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const createRoom = (settings: any) => {
     if (!socket) return;
-    const roomData = { name: `${user?.username}'s Room`, maxPlayers: 8, isPrivate: false };
-    socket.emit('rooms:create', roomData, (response: any) => {
+    socket.emit('rooms:create', settings, (response: any) => {
       if (response.success) {
+        setIsCreateModalOpen(false);
         navigate(`/room/${response.roomCode}`);
       } else {
         alert('Failed to create room: ' + response.message);
@@ -186,12 +189,12 @@ export default function Lobby() {
             <div className="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 text-center">
               <h3 className="text-lg font-semibold mb-4">Start a Game</h3>
               <button 
-                onClick={createRoom}
+                onClick={() => setIsCreateModalOpen(true)}
                 className="w-full bg-green-600 hover:bg-green-500 font-bold py-3 px-4 rounded transition text-lg shadow-[0_0_15px_rgba(22,163,74,0.4)]"
               >
                 + Create Room
               </button>
-              <p className="text-xs text-gray-500 mt-3">(Settings modal coming in Phase 8)</p>
+              <p className="text-xs text-gray-500 mt-3">Host a new game with custom rules</p>
             </div>
 
             <div className="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 text-center">
@@ -220,6 +223,14 @@ export default function Lobby() {
           </div>
         </div>
       </div>
+
+      <RoomSettingsModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={createRoom}
+        isCreateMode={true}
+        initialSettings={{ name: `${user?.username}'s Room` }}
+      />
     </div>
   );
 }

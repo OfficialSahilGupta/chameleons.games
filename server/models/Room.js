@@ -11,7 +11,9 @@ const RoomSchema = new mongoose.Schema({
     timerSeconds: { type: Number, default: 30 },
     enabledCategories: [{ type: String }],
     isPrivate: { type: Boolean, default: false },
-    password: { type: String }
+    password: { type: String },
+    turnMode: { type: String, enum: ['simultaneous', 'sequential'], default: 'simultaneous' },
+    allowSpectators: { type: Boolean, default: false }
   },
   status: {
     type: String,

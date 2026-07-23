@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
 import GameUI from '../components/GameUI';
+import RoomSettingsModal from '../components/RoomSettingsModal';
 
 export default function Room() {
   const { code } = useParams();
@@ -10,16 +11,8 @@ export default function Room() {
   const navigate = useNavigate();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [room, setRoom] = useState<any>(null);
-  const [categories, setCategories] = useState<any[]>([]);
   const [error, setError] = useState('');
-
-  // Fetch categories for the settings panel
-  useEffect(() => {
-    fetch('http://localhost:4001/api/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error(err));
-  }, []);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!token || !user) {
@@ -74,23 +67,11 @@ export default function Room() {
     socket?.emit('room:toggleReady', { code, isReady: !isReady });
   };
 
-  const handleUpdateSettings = (key: string, value: any) => {
+  const handleUpdateSettings = (newSettings: any) => {
     if (!isHost) return;
-    const newSettings = { ...room.settings, [key]: value };
     // Optimistic UI update could go here, but we'll wait for server broadcast
     socket?.emit('room:updateSettings', { code, settings: newSettings });
-  };
-
-  const handleToggleCategory = (catName: string) => {
-    if (!isHost) return;
-    const currentCats = room.settings.enabledCategories || [];
-    let newCats;
-    if (currentCats.includes(catName)) {
-      newCats = currentCats.filter((c: string) => c !== catName);
-    } else {
-      newCats = [...currentCats, catName];
-    }
-    handleUpdateSettings('enabledCategories', newCats);
+    setIsSettingsModalOpen(false);
   };
 
   const handleStartGame = () => {
@@ -176,85 +157,63 @@ export default function Room() {
             ))}
           </div>
 
-          {/* Settings Panel */}
-          <div className="md:col-span-1 bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl flex flex-col">
-            <h2 className="text-2xl font-bold mb-6 border-b border-gray-700 pb-2">Room Settings</h2>
-            
-            <div className="flex flex-col gap-5 flex-1">
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Max Players</label>
-                <input 
-                  type="number" 
-                  min="3" max="12" 
-                  disabled={!isHost}
-                  value={room.settings.maxPlayers}
-                  onChange={e => handleUpdateSettings('maxPlayers', parseInt(e.target.value))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded p-2 focus:outline-none focus:border-green-500 disabled:opacity-70 disabled:cursor-not-allowed"
-                />
+          {/* Settings Summary Panel */}
+          <div className="md:col-span-1 flex flex-col gap-6">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl flex flex-col">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
+                <h2 className="text-xl font-bold">Room Rules</h2>
+                {isHost && (
+                  <button 
+                    onClick={() => setIsSettingsModalOpen(true)}
+                    className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition"
+                  >
+                    Edit Settings
+                  </button>
+                )}
               </div>
-
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Number of Rounds</label>
-                <input 
-                  type="number" 
-                  min="1" max="10" 
-                  disabled={!isHost}
-                  value={room.settings.roundCount}
-                  onChange={e => handleUpdateSettings('roundCount', parseInt(e.target.value))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded p-2 focus:outline-none focus:border-green-500 disabled:opacity-70 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Turn Timer (seconds)</label>
-                <select 
-                  disabled={!isHost}
-                  value={room.settings.timerSeconds}
-                  onChange={e => handleUpdateSettings('timerSeconds', parseInt(e.target.value))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded p-2 focus:outline-none focus:border-green-500 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  <option value="15">15 Seconds (Fast)</option>
-                  <option value="30">30 Seconds (Normal)</option>
-                  <option value="45">45 Seconds (Relaxed)</option>
-                  <option value="60">60 Seconds (Slow)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 text-gray-300">
-                  <input 
-                    type="checkbox"
-                    disabled={!isHost}
-                    checked={room.settings.isPrivate}
-                    onChange={e => handleUpdateSettings('isPrivate', e.target.checked)}
-                    className="rounded bg-gray-700 border-gray-600 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                  Private Room (Requires Code)
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Enabled Categories</label>
-                <div className="bg-gray-700 border border-gray-600 rounded p-3 max-h-32 overflow-y-auto space-y-2">
-                  {categories.length === 0 && <div className="text-gray-500 text-sm text-center">Loading...</div>}
-                  {categories.map(cat => (
-                    <label key={cat._id} className={`flex items-center gap-2 text-sm ${!isHost ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}>
-                      <input 
-                        type="checkbox"
-                        disabled={!isHost}
-                        checked={(room.settings.enabledCategories || []).includes(cat.name)}
-                        onChange={() => handleToggleCategory(cat.name)}
-                        className="rounded bg-gray-800 border-gray-600 focus:ring-green-500"
-                      />
-                      {cat.name} <span className="text-xs text-gray-500">({cat.words.length} words)</span>
-                    </label>
-                  ))}
+              
+              <div className="flex flex-col gap-4 text-sm">
+                <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                  <span className="text-gray-400">Max Players</span>
+                  <span className="font-semibold">{room.settings.maxPlayers}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                  <span className="text-gray-400">Rounds</span>
+                  <span className="font-semibold">{room.settings.roundCount}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                  <span className="text-gray-400">Turn Timer</span>
+                  <span className="font-semibold">{room.settings.timerSeconds}s</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                  <span className="text-gray-400">Turn Mode</span>
+                  <span className="font-semibold capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                  <span className="text-gray-400">Privacy</span>
+                  <span className="font-semibold">{room.settings.isPrivate ? 'Private 🔒' : 'Public 🌍'}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                  <span className="text-gray-400">Spectators</span>
+                  <span className="font-semibold">{room.settings.allowSpectators ? 'Allowed' : 'Disabled'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 block mb-1">Categories</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {room.settings.enabledCategories?.length > 0 ? (
+                      room.settings.enabledCategories.map((c: string) => (
+                        <span key={c} className="text-xs bg-gray-700 px-2 py-1 rounded">{c}</span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-red-400">None selected!</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
             {isHost && (
-              <div className="mt-6 pt-6 border-t border-gray-700">
+              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
                 <button 
                   onClick={handleStartGame}
                   disabled={!canStart}
@@ -263,7 +222,7 @@ export default function Room() {
                   Start Game
                 </button>
                 {!canStart && (
-                  <p className="text-center text-xs text-gray-400 mt-2">
+                  <p className="text-center text-xs text-gray-400 mt-3">
                     {room.players.length < room.settings.minPlayers 
                       ? `Need at least ${room.settings.minPlayers} players` 
                       : 'Waiting for all players to be Ready'}
@@ -275,6 +234,16 @@ export default function Room() {
         </div>
         )}
       </div>
+
+      {isHost && (
+        <RoomSettingsModal 
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          onSave={handleUpdateSettings}
+          initialSettings={room}
+          isCreateMode={false}
+        />
+      )}
     </div>
   );
 }

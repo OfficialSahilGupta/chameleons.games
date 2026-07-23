@@ -28,7 +28,9 @@ class RoomService {
         timerSeconds: roomData.timerSeconds || 30,
         enabledCategories: roomData.enabledCategories || [],
         isPrivate: roomData.isPrivate || false,
-        password: roomData.password || ''
+        password: roomData.password || '',
+        turnMode: roomData.turnMode || 'simultaneous',
+        allowSpectators: roomData.allowSpectators || false
       },
       players: [{
         userId: hostId,
@@ -69,7 +71,14 @@ class RoomService {
     if (!room) throw new Error('Room not found');
     if (room.hostId._id.toString() !== hostId.toString()) throw new Error('Only the host can update settings');
 
-    room.settings = { ...room.settings, ...newSettings };
+    if (newSettings.name) {
+      room.name = newSettings.name;
+      delete newSettings.name;
+    }
+    
+    // Merge nested settings
+    Object.assign(room.settings, newSettings);
+    
     return room.save();
   }
 
