@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
 import RoomSettingsModal from '../components/RoomSettingsModal';
@@ -7,6 +7,7 @@ import RoomSettingsModal from '../components/RoomSettingsModal';
 export default function Lobby() {
   const { user, token, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [rooms, setRooms] = useState<any[]>([]);
   const [joinCode, setJoinCode] = useState('');
@@ -19,6 +20,11 @@ export default function Lobby() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
+    if (location.state?.errorMsg) {
+      setErrorMsg(location.state.errorMsg);
+      window.history.replaceState({}, document.title);
+    }
+
     if (!token || !user) {
       navigate('/');
       return;

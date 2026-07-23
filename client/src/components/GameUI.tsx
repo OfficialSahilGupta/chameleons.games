@@ -17,7 +17,8 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   const [guessInput, setGuessInput] = useState('');
   const [myVote, setMyVote] = useState<string | null>(null);
   const [hasSubmittedClue, setHasSubmittedClue] = useState(false);
-  const isHost = room.hostId._id === user.id;
+  const currentUserId = (user as any)?._id || user?.id;
+  const isHost = String(room.hostId._id || room.hostId) === String(currentUserId);
   const [chameleonPeek, setChameleonPeek] = useState<{fromUserId: string, text: string} | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [clueFeed, setClueFeed] = useState<any[]>([]);

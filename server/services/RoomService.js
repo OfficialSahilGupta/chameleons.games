@@ -50,6 +50,11 @@ class RoomService {
     const room = await this.getRoomByCode(code);
     if (!room) throw new Error('Room not found');
     
+    // Check if player is banned
+    if (room.bannedPlayers && room.bannedPlayers.some(bannedId => bannedId.toString() === userId.toString())) {
+      throw new Error('You have been kicked and cannot rejoin this room.');
+    }
+    
     // Check if player is already in room
     const existingPlayer = room.players.find(p => p.userId._id.toString() === userId.toString());
     

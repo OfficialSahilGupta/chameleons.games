@@ -79,6 +79,7 @@ io.on('connection', (socket) => {
       const room = await roomService.joinRoom(code, socket.user.id);
       socket.join(`room:${room.code}`);
       socketRooms.set(socket.id, room.code);
+      emitRoomState(code); // Fix: Notify everyone in the room that someone joined
       broadcastRooms();
       await chatService.addSystemMessage(code, `${socket.user.username} joined the room`);
       if (callback) callback({ success: true, roomCode: room.code });
@@ -151,15 +152,69 @@ io.on('connection', (socket) => {
     try {
       const room = await roomService.getRoomByCode(code);
       if (room && room.hostId._id.toString() === socket.user.id) {
-        if (room.status === 'lobby') {
-          await roomService.leaveRoom(code, targetUserId);
-          emitRoomState(code);
-          broadcastRooms();
-          io.to(`room:${code}`).emit('room:kicked', { kickedUserId: targetUserId });
-        }
+        await roomService.leaveRoom(code, targetUserId);
+        
+        // Add to banned players so they cannot rejoin
+        if (!room.bannedPlayers) room.bannedPlayers = [];
+        room.bannedPlayers.push(targetUserId);
+        await room.save();
+        
+        emitRoomState(code);
+        broadcastRooms();
+        io.to(`room:${code}`).emit('room:kicked', { kickedUserId: targetUserId });
       }
     } catch (err) {
       console.error('Error kicking player:', err);
+    }
+  });
+
+  socket.on('room:leave', async ({ code }, callback) => {
+    try {
+      await roomService.leaveRoom(code, socket.user.id);
+      socket.leave(`room:${code}`);
+      socketRooms.delete(socket.id);
+      emitRoomState(code);
+      broadcastRooms();
+      await chatService.addSystemMessage(code, `${socket.user.username} left the room`);
+      if (callback) callback({ success: true });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
+  socket.on('room:transferHost', async ({ code, targetUserId }, callback) => {
+    try {
+      const room = await roomService.getRoomByCode(code);
+      if (room && room.hostId._id.toString() === socket.user.id) {
+        if (room.status !== 'lobby') {
+          if (callback) callback({ success: false, message: 'Cannot transfer host while game is active.' });
+          return;
+        }
+        
+        // Check if target is already hosting another room
+        const RoomModel = require('./models/Room');
+        const existingRoom = await RoomModel.findOne({ 
+          hostId: targetUserId, 
+          status: { $ne: 'finished' } 
+        });
+        
+        if (existingRoom) {
+          if (callback) callback({ success: false, message: 'That player is already hosting another active room.' });
+          return;
+        }
+
+        room.hostId = targetUserId;
+        await room.save();
+        
+        emitRoomState(code);
+        broadcastRooms();
+        if (callback) callback({ success: true });
+      } else {
+        if (callback) callback({ success: false, message: 'You are not the host.' });
+      }
+    } catch (err) {
+      console.error('Error transferring host:', err);
+      if (callback) callback({ success: false, message: 'Server error.' });
     }
   });
 

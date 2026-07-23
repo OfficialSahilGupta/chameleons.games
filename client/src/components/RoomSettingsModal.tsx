@@ -112,10 +112,10 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700">
-                <label className="block text-gray-300 font-bold mb-2">Max Players (4-12)</label>
+                <label className="block text-gray-300 font-bold mb-2">Max Players (2-20)</label>
                 <input 
                   type="number" 
-                  min="3" max="12" 
+                  min="2" max="20" 
                   value={maxPlayers}
                   onChange={e => setMaxPlayers(parseInt(e.target.value))}
                   className="w-full bg-gray-800 border border-gray-600 rounded p-3 focus:outline-none focus:border-green-500 text-white"

@@ -15,6 +15,7 @@ export default function Room() {
   const [error, setError] = useState('');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [gamePhase, setGamePhase] = useState<string>('lobby');
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !user) {
@@ -48,9 +49,9 @@ export default function Room() {
     });
 
     newSocket.on('room:kicked', ({ kickedUserId }) => {
-      if (user.id === kickedUserId) {
-        alert('You were kicked by the host.');
-        navigate('/lobby');
+      const currentUserId = (user as any)?._id || user?.id;
+      if (String(currentUserId) === String(kickedUserId)) {
+        navigate('/lobby', { state: { errorMsg: 'You have been kicked out of the room. Please create or join another room.' } });
       }
     });
 
@@ -75,8 +76,9 @@ export default function Room() {
     return <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>;
   }
 
-  const isHost = room.hostId._id === user?.id;
-  const myPlayer = room.players.find((p: any) => p.userId._id === user?.id);
+  const currentUserId = (user as any)?._id || user?.id;
+  const isHost = String(room.hostId._id || room.hostId) === String(currentUserId);
+  const myPlayer = room.players.find((p: any) => String(p.userId._id || p.userId) === String(currentUserId));
   const isReady = myPlayer?.isReady;
   
   const handleToggleReady = () => {
@@ -100,6 +102,24 @@ export default function Room() {
   const handleKickPlayer = (targetUserId: string) => {
     if (!isHost) return;
     socket?.emit('room:kickPlayer', { code, targetUserId });
+    setSelectedPlayerId(null);
+  };
+
+  const handleTransferHost = (targetUserId: string) => {
+    if (!isHost) return;
+    socket?.emit('room:transferHost', { code, targetUserId }, (res: any) => {
+      if (!res.success) {
+        alert(res.message);
+      } else {
+        setSelectedPlayerId(null);
+      }
+    });
+  };
+
+  const handleLeaveRoom = () => {
+    socket?.emit('room:leave', { code }, () => {
+      navigate('/lobby');
+    });
   };
 
   const allReady = room.players.every((p: any) => p.isReady || p.userId._id === room.hostId._id);
@@ -117,7 +137,7 @@ export default function Room() {
             <span className={`px-3 py-1 rounded-full text-sm font-semibold uppercase ${room.status === 'lobby' ? 'bg-blue-900 text-blue-300' : 'bg-yellow-900 text-yellow-300'}`}>
               {room.status.replace('_', ' ')}
             </span>
-            <button onClick={() => navigate('/lobby')} className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded">Leave</button>
+            <button onClick={handleLeaveRoom} className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded">Leave</button>
           </div>
         </header>
 
@@ -143,53 +163,78 @@ export default function Room() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {room.players.map((p: any) => {
-                    const isPlayerHost = p.userId._id === room.hostId._id;
+                    const isPlayerHost = String(p.userId._id || p.userId) === String(room.hostId._id || room.hostId);
+                    const isSelected = String(selectedPlayerId) === String(p.userId._id || p.userId);
+                    const playerUserIdStr = String(p.userId._id || p.userId);
+                    
                     return (
-                      <div key={p.userId._id} className="flex items-center gap-4 bg-gray-700 p-3 rounded-lg border border-gray-600">
+                      <div 
+                        key={playerUserIdStr} 
+                        className={`relative flex items-center gap-4 p-3 rounded-lg border transition cursor-pointer ${
+                          isSelected ? 'bg-gray-600 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-gray-700 border-gray-600 hover:border-gray-500'
+                        }`}
+                        onClick={() => {
+                          console.log('Player clicked:', p.userId.username, 'isHost:', isHost, 'isPlayerHost:', isPlayerHost);
+                          setSelectedPlayerId(isSelected ? null : playerUserIdStr);
+                        }}
+                      >
                         <img 
                           src={p.userId.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.userId.username}`} 
                           alt="avatar" 
                           className="w-12 h-12 rounded-full bg-gray-800"
                         />
                         <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-lg">{p.userId.username}</span>
-                              {isPlayerHost && <span title="Host" className="text-yellow-400">👑</span>}
-                              {p.userId._id === user?.id && <span className="text-xs text-gray-400">(You)</span>}
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-lg">{p.userId.username}</span>
+                            {isPlayerHost && <span title="Host" className="text-yellow-400">👑</span>}
+                            {playerUserIdStr === String(currentUserId) && <span className="text-xs text-gray-400">(You)</span>}
+                          </div>
+                          
+                          {/* Default view */}
+                          {!isSelected && (
+                            <div className="text-sm">
+                              {isPlayerHost ? (
+                                <span className="text-blue-400">Host</span>
+                              ) : (
+                                <span className={p.isReady ? 'text-green-400 font-semibold' : 'text-gray-400'}>
+                                  {p.isReady ? 'Ready' : 'Not Ready'}
+                                </span>
+                              )}
                             </div>
-                            {isHost && !isPlayerHost && room.status === 'lobby' && (
-                              <button 
-                                onClick={() => handleKickPlayer(p.userId._id)}
-                                className="text-xs bg-red-900/50 hover:bg-red-600 text-red-200 border border-red-800 hover:border-red-500 px-2 py-1 rounded transition"
-                                title="Kick Player"
-                              >
-                                Kick
-                              </button>
-                            )}
-                          </div>
-                          <div className="text-sm">
-                            {isPlayerHost ? (
-                              <span className="text-blue-400">Host</span>
-                            ) : (
-                              <span className={p.isReady ? 'text-green-400 font-semibold' : 'text-gray-400'}>
-                                {p.isReady ? 'Ready' : 'Not Ready'}
-                              </span>
-                            )}
-                          </div>
+                          )}
+
+                          {/* Action Menu (Visible when clicked) */}
+                          {isSelected && (
+                            <div className="flex items-center gap-2 mt-1">
+                              {isHost && !isPlayerHost && room.status === 'lobby' ? (
+                                <>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleKickPlayer(playerUserIdStr); }}
+                                    className="text-xs bg-red-900/80 hover:bg-red-600 text-red-100 px-3 py-1.5 rounded font-semibold transition"
+                                  >
+                                    Kick Player
+                                  </button>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleTransferHost(playerUserIdStr); }}
+                                    className="text-xs bg-blue-900/80 hover:bg-blue-600 text-blue-100 px-3 py-1.5 rounded font-semibold transition"
+                                  >
+                                    Make Host
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-gray-400">
+                                  {isPlayerHost ? 'This player is the host.' : 'You do not have permission to manage this player.'}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
                 
-                {/* Empty Slots */}
-                {Array.from({ length: Math.max(0, room.settings.maxPlayers - room.players.length) }).map((_, i) => (
-                  <div key={`empty-${i}`} className="mt-4 p-4 border border-dashed border-gray-600 rounded-lg text-center text-gray-500 bg-gray-800/50">
-                    Waiting for player...
-                  </div>
-                ))}
-              </div>
+                {/* Empty Slots */}              </div>
             )}
           </div>
 

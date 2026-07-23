@@ -5,8 +5,8 @@ const RoomSchema = new mongoose.Schema({
   name: { type: String, required: true },
   hostId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   settings: {
-    maxPlayers: { type: Number, default: 8 },
-    minPlayers: { type: Number, default: 3 },
+    maxPlayers: { type: Number, default: 20 },
+    minPlayers: { type: Number, default: 2 },
     roundCount: { type: Number, default: 3 },
     timerSeconds: { type: Number, default: 30 },
     enabledCategories: [{ type: String }],
@@ -29,6 +29,7 @@ const RoomSchema = new mongoose.Schema({
     hasSubmittedClue: { type: Boolean, default: false },
     score: { type: Number, default: 0 }
   }],
+  bannedPlayers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   currentRound: { type: Number, default: 1 },
   createdAt: { type: Date, default: Date.now }
 });
