@@ -16,6 +16,7 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   const [chameleonPeek, setChameleonPeek] = useState<{fromUserId: string, text: string} | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [clueFeed, setClueFeed] = useState<any[]>([]);
+  const [submittedPlayers, setSubmittedPlayers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!socket) return;
@@ -35,6 +36,7 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
         setHasSubmittedClue(false);
         setChameleonPeek(null);
         setClueFeed([]);
+        setSubmittedPlayers(new Set());
       }
     });
 
@@ -50,11 +52,20 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
       setClueFeed(prev => [...prev, data]);
     });
 
+    socket.on('clue:submitted', (data) => {
+      setSubmittedPlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.add(data.userId);
+        return newSet;
+      });
+    });
+
     return () => {
       socket.off('game:state');
       socket.off('word:reveal');
       socket.off('clue:peek');
       socket.off('clue:feed');
+      socket.off('clue:submitted');
     };
   }, [socket]);
 
@@ -104,26 +115,65 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
 
       {gameState.phase === 'clue_writing' && (
         <div className="flex flex-col gap-8">
-          <div className="text-center bg-gray-900 p-6 rounded-xl border border-gray-700">
-            <div className="text-gray-400 mb-2">Category: <span className="font-bold text-white">{gameState.category}</span></div>
+          {/* Avatar Strip with Ticks */}
+          <div className="flex justify-center gap-4 flex-wrap">
+            {gameState.players.map((p: any) => {
+              const hasSubmitted = submittedPlayers.has(p.id);
+              return (
+                <div key={p.id} className="relative flex flex-col items-center gap-1">
+                  <div className={`relative rounded-full p-1 border-2 transition-colors ${hasSubmitted ? 'border-green-500' : 'border-gray-600'}`}>
+                    <img 
+                      src={p.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`} 
+                      alt="avatar" 
+                      className={`w-12 h-12 rounded-full bg-gray-800 transition ${hasSubmitted ? 'opacity-50' : ''}`}
+                    />
+                    {hasSubmitted && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl drop-shadow-md">✅</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-400 font-semibold">{p.username}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Linear Countdown Bar */}
+          <div className="w-full bg-gray-700 h-3 rounded-full overflow-hidden shadow-inner">
+            <div 
+              className={`h-full transition-all duration-1000 ease-linear ${timeLeft <= 10 ? 'bg-red-500' : 'bg-blue-500'}`}
+              style={{ width: `${Math.max(0, (timeLeft / gameState.settings.timerSeconds) * 100)}%` }}
+            ></div>
+          </div>
+
+          <div className="text-center bg-gray-900 p-8 rounded-2xl border border-gray-700 shadow-xl min-h-[160px] flex flex-col justify-center">
+            <div className="text-gray-400 mb-2 font-semibold uppercase tracking-widest text-sm">
+              Category: <span className="font-bold text-white ml-1">{gameState.category}</span>
+            </div>
             {myRoleData?.isChameleon ? (
               <div>
-                <h3 className="text-3xl font-bold text-red-500 mb-2">You are the Chameleon!</h3>
-                <p className="text-gray-400">Blend in. Don't get caught.</p>
+                <div className="text-gray-400 mb-1">The Secret Word is:</div>
+                <h3 className="text-4xl font-bold text-gray-500 tracking-wider">???????</h3>
+                <p className="text-red-400 font-bold mt-2 text-sm uppercase tracking-wide">You are the Chameleon</p>
               </div>
             ) : (
               <div>
                 <div className="text-gray-400 mb-1">The Secret Word is:</div>
                 <h3 className="text-4xl font-bold text-green-400 tracking-wider">{myRoleData?.word}</h3>
+                <p className="text-blue-400 font-bold mt-2 text-sm uppercase tracking-wide">You are a Villager</p>
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-gray-700 p-6 rounded-xl">
-              <h4 className="font-bold mb-4 text-xl">Write your Clue</h4>
+            <div className="bg-gray-700 p-6 rounded-xl shadow-lg border border-gray-600">
+              <h4 className="font-bold mb-4 text-xl">Clue Box</h4>
               {hasSubmittedClue ? (
-                <div className="text-green-400 font-bold text-center py-8 bg-gray-800 rounded">Clue submitted! Waiting for others...</div>
+                <div className="text-green-400 font-bold text-center py-8 bg-gray-800 rounded border border-green-500/30">
+                  Clue submitted! ✅<br/>
+                  <span className="text-gray-400 text-sm font-normal">Waiting for others...</span>
+                </div>
               ) : (
                 <form onSubmit={submitClue} className="flex flex-col gap-4">
                   <input 
@@ -131,39 +181,43 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
                     value={clueInput}
                     onChange={e => setClueInput(e.target.value)}
                     placeholder="Enter one word or short phrase..."
-                    className="p-3 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:border-blue-500"
+                    className="p-4 rounded-lg bg-gray-800 border border-gray-500 focus:outline-none focus:border-blue-500 text-lg shadow-inner"
                     maxLength={50}
                     required
                   />
-                  <button type="submit" className="bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold transition">Submit Clue</button>
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold text-lg shadow-md transition">Submit Clue</button>
                 </form>
               )}
 
               {myRoleData?.isChameleon && (
-                <div className="mt-6 p-4 border border-dashed border-red-500/50 bg-red-900/20 rounded">
-                  <h4 className="text-red-400 font-bold mb-2">Chameleon Intel</h4>
+                <div className="mt-6 p-4 border-2 border-dashed border-red-500/50 bg-red-900/20 rounded-lg">
+                  <h4 className="text-red-400 font-bold mb-2 flex items-center gap-2">
+                    <span>👁️</span> Chameleon Intel
+                  </h4>
                   {chameleonPeek ? (
-                    <p className="text-sm">Someone submitted: <span className="italic font-bold text-white">"{chameleonPeek.text}"</span></p>
+                    <p className="text-sm">Someone submitted: <span className="italic font-bold text-white text-lg">"{chameleonPeek.text}"</span></p>
                   ) : (
-                    <p className="text-sm text-gray-500">Waiting for a villager to submit a clue so you can peek...</p>
+                    <p className="text-sm text-gray-500 italic animate-pulse">Waiting for a villager to submit a clue so you can peek...</p>
                   )}
                 </div>
               )}
             </div>
 
-            <div className="bg-gray-900 p-6 rounded-xl border border-gray-700">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-700 shadow-inner">
               <h4 className="font-bold mb-4 text-gray-400">Live Feed (Villagers Only)</h4>
               {!myRoleData?.isChameleon ? (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                   {clueFeed.length === 0 && <div className="text-sm text-gray-500 italic">No clues submitted yet...</div>}
                   {clueFeed.map((c, i) => (
-                    <div key={i} className="bg-gray-800 p-3 rounded border border-gray-700">
-                      <span className="font-bold text-blue-400">{c.username}:</span> <span className="italic">"{c.text}"</span>
+                    <div key={i} className="bg-gray-800 p-3 rounded-lg border border-gray-700 flex flex-col slide-in-bottom">
+                      <span className="font-bold text-blue-400 text-xs mb-1 uppercase">{c.username}</span> 
+                      <span className="italic text-lg">"{c.text}"</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-32 text-gray-600 italic">
+                <div className="flex flex-col items-center justify-center h-48 text-gray-600 italic gap-2 bg-gray-800/50 rounded-lg">
+                  <span className="text-4xl">🙈</span>
                   Chameleons cannot see the live feed.
                 </div>
               )}
