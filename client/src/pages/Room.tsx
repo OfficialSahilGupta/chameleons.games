@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
 import GameUI from '../components/GameUI';
 import RoomSettingsModal from '../components/RoomSettingsModal';
+import ChatPanel from '../components/ChatPanel';
 
 export default function Room() {
   const { code } = useParams();
@@ -13,6 +14,7 @@ export default function Room() {
   const [room, setRoom] = useState<any>(null);
   const [error, setError] = useState('');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [gamePhase, setGamePhase] = useState<string>('lobby');
 
   useEffect(() => {
     if (!token || !user) {
@@ -36,6 +38,13 @@ export default function Room() {
 
     newSocket.on('room:stateUpdated', (updatedRoom) => {
       setRoom(updatedRoom);
+      if (updatedRoom.status === 'lobby') {
+        setGamePhase('lobby');
+      }
+    });
+
+    newSocket.on('game:state', (state) => {
+      setGamePhase(state.phase);
     });
 
     return () => {
@@ -100,139 +109,138 @@ export default function Room() {
           </div>
         </header>
 
-        {room.status !== 'lobby' ? (
-          <GameUI socket={socket} code={code as string} user={user} room={room} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Players List */}
-            <div className="md:col-span-2 bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
-              <h2 className="text-2xl font-bold">Players <span className="text-gray-400 text-lg font-normal">({room.players.length}/{room.settings.maxPlayers})</span></h2>
-              {!isHost && room.status === 'lobby' && (
-                <button 
-                  onClick={handleToggleReady}
-                  className={`px-6 py-2 rounded font-bold transition ${isReady ? 'bg-yellow-500 hover:bg-yellow-400 text-gray-900' : 'bg-green-600 hover:bg-green-500 text-white'}`}
-                >
-                  {isReady ? 'Unready' : 'Ready Up'}
-                </button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {room.players.map((p: any) => {
-                const isPlayerHost = p.userId._id === room.hostId._id;
-                return (
-                  <div key={p.userId._id} className="flex items-center gap-4 bg-gray-700 p-3 rounded-lg border border-gray-600">
-                    <img 
-                      src={p.userId.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.userId.username}`} 
-                      alt="avatar" 
-                      className="w-12 h-12 rounded-full bg-gray-800"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-lg">{p.userId.username}</span>
-                        {isPlayerHost && <span title="Host" className="text-yellow-400">👑</span>}
-                        {p.userId._id === user?.id && <span className="text-xs text-gray-400">(You)</span>}
-                      </div>
-                      <div className="text-sm">
-                        {isPlayerHost ? (
-                          <span className="text-blue-400">Host</span>
-                        ) : (
-                          <span className={p.isReady ? 'text-green-400 font-semibold' : 'text-gray-400'}>
-                            {p.isReady ? 'Ready' : 'Not Ready'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* Empty Slots */}
-            {Array.from({ length: Math.max(0, room.settings.maxPlayers - room.players.length) }).map((_, i) => (
-              <div key={`empty-${i}`} className="mt-4 p-4 border border-dashed border-gray-600 rounded-lg text-center text-gray-500 bg-gray-800/50">
-                Waiting for player...
-              </div>
-            ))}
-          </div>
-
-          {/* Settings Summary Panel */}
-          <div className="md:col-span-1 flex flex-col gap-6">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl flex flex-col">
-              <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
-                <h2 className="text-xl font-bold">Room Rules</h2>
-                {isHost && (
-                  <button 
-                    onClick={() => setIsSettingsModalOpen(true)}
-                    className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition"
-                  >
-                    Edit Settings
-                  </button>
-                )}
-              </div>
-              
-              <div className="flex flex-col gap-4 text-sm">
-                <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                  <span className="text-gray-400">Max Players</span>
-                  <span className="font-semibold">{room.settings.maxPlayers}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                  <span className="text-gray-400">Rounds</span>
-                  <span className="font-semibold">{room.settings.roundCount}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                  <span className="text-gray-400">Turn Timer</span>
-                  <span className="font-semibold">{room.settings.timerSeconds}s</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                  <span className="text-gray-400">Turn Mode</span>
-                  <span className="font-semibold capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                  <span className="text-gray-400">Privacy</span>
-                  <span className="font-semibold">{room.settings.isPrivate ? 'Private 🔒' : 'Public 🌍'}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                  <span className="text-gray-400">Spectators</span>
-                  <span className="font-semibold">{room.settings.allowSpectators ? 'Allowed' : 'Disabled'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 block mb-1">Categories</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {room.settings.enabledCategories?.length > 0 ? (
-                      room.settings.enabledCategories.map((c: string) => (
-                        <span key={c} className="text-xs bg-gray-700 px-2 py-1 rounded">{c}</span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-red-400">None selected!</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {isHost && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+          
+          {/* Main Content Area */}
+          <div className="md:col-span-3">
+            {room.status !== 'lobby' ? (
+              <GameUI socket={socket} code={code as string} user={user} room={room} />
+            ) : (
               <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
-                <button 
-                  onClick={handleStartGame}
-                  disabled={!canStart}
-                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 font-bold py-4 rounded text-xl shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none transition-all"
-                >
-                  Start Game
-                </button>
-                {!canStart && (
-                  <p className="text-center text-xs text-gray-400 mt-3">
-                    {room.players.length < room.settings.minPlayers 
-                      ? `Need at least ${room.settings.minPlayers} players` 
-                      : 'Waiting for all players to be Ready'}
-                  </p>
-                )}
+                <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
+                  <h2 className="text-2xl font-bold">Players <span className="text-gray-400 text-lg font-normal">({room.players.length}/{room.settings.maxPlayers})</span></h2>
+                  {!isHost && room.status === 'lobby' && (
+                    <button 
+                      onClick={handleToggleReady}
+                      className={`px-6 py-2 rounded font-bold transition ${isReady ? 'bg-yellow-500 hover:bg-yellow-400 text-gray-900' : 'bg-green-600 hover:bg-green-500 text-white'}`}
+                    >
+                      {isReady ? 'Unready' : 'Ready Up'}
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {room.players.map((p: any) => {
+                    const isPlayerHost = p.userId._id === room.hostId._id;
+                    return (
+                      <div key={p.userId._id} className="flex items-center gap-4 bg-gray-700 p-3 rounded-lg border border-gray-600">
+                        <img 
+                          src={p.userId.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.userId.username}`} 
+                          alt="avatar" 
+                          className="w-12 h-12 rounded-full bg-gray-800"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-lg">{p.userId.username}</span>
+                            {isPlayerHost && <span title="Host" className="text-yellow-400">👑</span>}
+                            {p.userId._id === user?.id && <span className="text-xs text-gray-400">(You)</span>}
+                          </div>
+                          <div className="text-sm">
+                            {isPlayerHost ? (
+                              <span className="text-blue-400">Host</span>
+                            ) : (
+                              <span className={p.isReady ? 'text-green-400 font-semibold' : 'text-gray-400'}>
+                                {p.isReady ? 'Ready' : 'Not Ready'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Empty Slots */}
+                {Array.from({ length: Math.max(0, room.settings.maxPlayers - room.players.length) }).map((_, i) => (
+                  <div key={`empty-${i}`} className="mt-4 p-4 border border-dashed border-gray-600 rounded-lg text-center text-gray-500 bg-gray-800/50">
+                    Waiting for player...
+                  </div>
+                ))}
               </div>
             )}
           </div>
+
+          {/* Right Sidebar: Settings & Chat */}
+          <div className="md:col-span-1 flex flex-col gap-6 h-[80vh]">
+            
+            {room.status === 'lobby' && (
+              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl flex flex-col shrink-0">
+                <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
+                  <h2 className="text-xl font-bold">Room Rules</h2>
+                  {isHost && (
+                    <button 
+                      onClick={() => setIsSettingsModalOpen(true)}
+                      className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                
+                <div className="flex flex-col gap-4 text-sm">
+                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                    <span className="text-gray-400">Max Players</span>
+                    <span className="font-semibold">{room.settings.maxPlayers}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                    <span className="text-gray-400">Rounds</span>
+                    <span className="font-semibold">{room.settings.roundCount}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                    <span className="text-gray-400">Turn Timer</span>
+                    <span className="font-semibold">{room.settings.timerSeconds}s</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                    <span className="text-gray-400">Turn Mode</span>
+                    <span className="font-semibold capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
+                    <span className="text-gray-400">Privacy</span>
+                    <span className="font-semibold">{room.settings.isPrivate ? 'Private 🔒' : 'Public 🌍'}</span>
+                  </div>
+                </div>
+
+                {isHost && (
+                  <div className="mt-6 pt-4 border-t border-gray-700">
+                    <button 
+                      onClick={handleStartGame}
+                      disabled={!canStart}
+                      className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 font-bold py-3 rounded text-lg shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none transition-all"
+                    >
+                      Start Game
+                    </button>
+                    {!canStart && (
+                      <p className="text-center text-xs text-gray-400 mt-2">
+                        {room.players.length < room.settings.minPlayers 
+                          ? `Need ${room.settings.minPlayers - room.players.length} more` 
+                          : 'Waiting for Ready'}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex-1 min-h-[400px]">
+              <ChatPanel 
+                socket={socket} 
+                code={code as string} 
+                disabled={gamePhase === 'clue_writing'} 
+              />
+            </div>
+            
+          </div>
         </div>
-        )}
       </div>
 
       {isHost && (

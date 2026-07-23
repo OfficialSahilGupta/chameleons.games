@@ -1,6 +1,7 @@
 const Room = require('../models/Room');
 const Round = require('../models/Round');
 const wordBankService = require('./WordBankService');
+const chatService = require('./ChatService');
 
 const ACTIVE_GAMES = new Map(); // code -> GameState
 
@@ -35,6 +36,7 @@ class GameEngine {
     };
 
     ACTIVE_GAMES.set(roomCode, gameState);
+    await chatService.addSystemMessage(roomCode, `Round ${gameState.currentRoundNumber} started!`);
     await this.startRound(roomCode);
   }
 
@@ -92,6 +94,7 @@ class GameEngine {
     if (!game) return;
 
     game.phase = 'clue_writing';
+    chatService.addSystemMessage(roomCode, 'Clue writing phase started.');
     const duration = game.settings.timerSeconds * 1000;
     const endsAt = Date.now() + duration;
 
@@ -191,6 +194,7 @@ class GameEngine {
     if (!game) return;
 
     game.phase = 'discussion';
+    chatService.addSystemMessage(roomCode, 'Discussion phase started.');
     const duration = 60 * 1000; // 1 min discussion placeholder
     const endsAt = Date.now() + duration;
 
@@ -209,6 +213,7 @@ class GameEngine {
     if (!game) return;
 
     game.phase = 'voting';
+    chatService.addSystemMessage(roomCode, 'Voting phase started.');
     const duration = 30 * 1000;
     const endsAt = Date.now() + duration;
 
@@ -258,6 +263,11 @@ class GameEngine {
     });
 
     const isChameleonEliminated = eliminatedId === game.chameleonId;
+    let eliminatedUser = game.players.find(p => p.id === eliminatedId);
+    let eliminatedUsername = eliminatedUser ? eliminatedUser.username : 'Someone';
+
+    await chatService.addSystemMessage(roomCode, `${eliminatedUsername} was eliminated! They were ${isChameleonEliminated ? 'the Chameleon' : 'an innocent Villager'}.`);
+
     game.phase = 'reveal';
     
     // Update round

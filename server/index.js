@@ -41,10 +41,12 @@ const io = new Server(server, {
 
 const roomService = require('./services/RoomService');
 const gameEngine = require('./services/GameEngine');
+const chatService = require('./services/ChatService');
 
 // Socket auth middleware
 io.use(socketAuthMiddleware);
 
+chatService.setIO(io);
 const engine = gameEngine.init(io);
 
 const broadcastRooms = async () => {
@@ -74,6 +76,7 @@ io.on('connection', (socket) => {
       const room = await roomService.joinRoom(code, socket.user.id);
       socket.join(`room:${room.code}`);
       broadcastRooms();
+      await chatService.addSystemMessage(code, `${socket.user.username} joined the room`);
       if (callback) callback({ success: true, roomCode: room.code });
     } catch (err) {
       if (callback) callback({ success: false, message: err.message });
@@ -141,6 +144,25 @@ io.on('connection', (socket) => {
 
   socket.on('game:vote:submit', ({ code, votedForId }) => {
     engine.handleVote(code, socket.user.id, votedForId);
+  });
+
+  // CHAT EVENTS
+  socket.on('chat:history', async ({ code }, callback) => {
+    try {
+      const history = await chatService.getHistory(code);
+      if (callback) callback({ success: true, history: history.reverse() });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
+  socket.on('chat:send', async ({ code, text }, callback) => {
+    try {
+      await chatService.addMessage(code, socket.user.id, socket.user.username, text);
+      if (callback) callback({ success: true });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
   });
 
   socket.on('disconnect', () => {
