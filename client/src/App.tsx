@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore';
 import Login from './pages/Login';
 import Lobby from './pages/Lobby';
 import Admin from './pages/Admin';
+import Room from './pages/Room';
 
 function App() {
   const { token, user } = useAuthStore();
@@ -20,6 +21,10 @@ function App() {
       <Route 
         path="/admin" 
         element={token && user?.isAdmin ? <Admin /> : <Navigate to="/lobby" replace />} 
+      />
+      <Route 
+        path="/room/:code" 
+        element={token ? <Room /> : <Navigate to="/" replace />} 
       />
     </Routes>
   );

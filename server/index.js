@@ -39,18 +39,48 @@ const io = new Server(server, {
   },
 });
 
+const roomService = require('./services/RoomService');
+
 // Socket auth middleware
 io.use(socketAuthMiddleware);
+
+const broadcastRooms = async () => {
+  const rooms = await roomService.getAllRooms();
+  io.emit('rooms:update', rooms);
+};
 
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}, User: ${socket.user?.username}`);
   
-  socket.on('echo', (data) => {
-    socket.emit('echo_response', data);
+  // Send initial room list when user connects
+  broadcastRooms();
+  
+  socket.on('rooms:create', async (roomData, callback) => {
+    try {
+      const room = await roomService.createRoom(socket.user.id, roomData);
+      // Join the socket room
+      socket.join(`room:${room.code}`);
+      broadcastRooms();
+      if (callback) callback({ success: true, roomCode: room.code });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
+  socket.on('rooms:join', async ({ code }, callback) => {
+    try {
+      const room = await roomService.joinRoom(code, socket.user.id);
+      socket.join(`room:${room.code}`);
+      broadcastRooms();
+      if (callback) callback({ success: true, roomCode: room.code });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
   });
 
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
+    // Handle player disconnect from active rooms later...
   });
 });
 
