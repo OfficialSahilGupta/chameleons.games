@@ -12,7 +12,7 @@ interface GameUIProps {
 
 export default function GameUI({ socket, code, user, room }: GameUIProps) {
   const [gameState, setGameState] = useState<any>(null);
-  const [myRoleData, setMyRoleData] = useState<{ category: string, word: string | null, isChameleon: boolean } | null>(null);
+  const [myRoleData, setMyRoleData] = useState<{ category: string, word: string | null, isChameleon: boolean, boardWords?: string[] } | null>(null);
   const [clueInput, setClueInput] = useState('');
   const [guessInput, setGuessInput] = useState('');
   const [myVote, setMyVote] = useState<string | null>(null);
@@ -270,6 +270,30 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
                 <div className="text-gray-400 mb-1">The Secret Word is:</div>
                 <h3 className="text-3xl md:text-4xl font-bold text-green-400 tracking-wider bg-green-900/30 inline-block px-4 py-2 rounded-lg">{myRoleData?.word}</h3>
                 <p className="text-blue-400 font-bold mt-2 text-sm md:text-base uppercase tracking-wide">You are a Villager</p>
+              </div>
+            )}
+            
+            {/* 16 Words Board Grid */}
+            {myRoleData?.boardWords && (
+              <div className="mt-8 relative z-10">
+                <h4 className="text-xl font-bold mb-4 text-gray-300">Board Words</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {myRoleData.boardWords.map((bw, idx) => {
+                    const isSecret = !myRoleData.isChameleon && bw === myRoleData.word;
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`p-3 rounded-lg border font-bold text-center transition-all ${
+                          isSecret 
+                            ? 'bg-green-600/30 border-green-400 text-green-300 shadow-[0_0_15px_rgba(74,222,128,0.3)]' 
+                            : 'bg-gray-700/50 border-gray-600 text-gray-300'
+                        }`}
+                      >
+                        {bw}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

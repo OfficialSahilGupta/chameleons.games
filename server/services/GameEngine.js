@@ -33,6 +33,7 @@ class GameEngine {
       currentRoundNumber: 1,
       chameleonId: null,
       secretWord: null,
+      boardWords: [],
       category: null,
       clues: [],
       votes: [],
@@ -62,11 +63,14 @@ class GameEngine {
     game.chameleonId = chameleon.id;
     game.previousChameleonId = chameleon.id;
 
-    // 2. Pick Word
+    // 2. Pick Word and Board
     const enabledCategories = game.settings.enabledCategories;
     if (enabledCategories.length === 0) throw new Error('No categories enabled');
     game.category = enabledCategories[Math.floor(Math.random() * enabledCategories.length)];
-    game.secretWord = await wordBankService.getRandomWord(game.category);
+    
+    const { boardWords, secretWord } = await wordBankService.getRoundBoard(game.category, 16);
+    game.secretWord = secretWord;
+    game.boardWords = boardWords;
 
     // Save round to DB
     const round = new Round({
@@ -87,6 +91,7 @@ class GameEngine {
         this.io.to(`user:${p.id}`).emit('word:reveal', {
           category: game.category,
           word: isChameleon ? null : game.secretWord,
+          boardWords: game.boardWords,
           isChameleon
         });
       });
@@ -395,6 +400,9 @@ class GameEngine {
       phase: game.phase,
       currentRoundNumber: game.currentRoundNumber,
       category: game.category, // Category is public
+      boardWords: game.boardWords, // Board words are public
+      clues: game.clues,
+      votes: game.votes,
       players: game.players,
       settings: game.settings,
       ...extraPayload
@@ -417,6 +425,7 @@ class GameEngine {
       this.io.to(socketId).emit('word:reveal', {
         category: game.category,
         word: isChameleon ? null : game.secretWord,
+        boardWords: game.boardWords,
         isChameleon
       });
     }

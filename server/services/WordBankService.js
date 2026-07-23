@@ -12,6 +12,23 @@ class WordBankService {
     return activeWords[randomIndex].text;
   }
 
+  async getRoundBoard(categoryName, count = 16) {
+    const category = await Category.findOne({ name: categoryName, isActive: true });
+    if (!category) throw new Error('Category not found or inactive');
+    
+    const activeWords = category.words.filter(w => w.isActive);
+    if (activeWords.length === 0) throw new Error('No active words in category');
+    
+    // Shuffle and pick `count` words (or less if not enough)
+    const shuffled = activeWords.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, count).map(w => w.text);
+    
+    const secretWord = selected[Math.floor(Math.random() * selected.length)];
+    
+    return { boardWords: selected, secretWord };
+  }
+
+
   async getCategories(includeInactive = false) {
     const query = includeInactive ? {} : { isActive: true };
     return Category.find(query);

@@ -25,10 +25,15 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
     fetch('http://localhost:4001/api/categories')
       .then(res => res.json())
       .then(data => {
-        setCategories(data);
-        if (isCreateMode && data.length > 0 && enabledCategories.length === 0) {
+        const sortedData = data.sort((a: any, b: any) => {
+          if (a.name === 'Marvel') return 1;
+          if (b.name === 'Marvel') return -1;
+          return 0;
+        });
+        setCategories(sortedData);
+        if (isCreateMode && sortedData.length > 0 && enabledCategories.length === 0) {
           // Pre-select first category by default
-          setEnabledCategories([data[0].name]);
+          setEnabledCategories([sortedData[0].name]);
         }
       })
       .catch(err => console.error(err));
@@ -53,11 +58,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
   if (!isOpen) return null;
 
   const handleToggleCategory = (catName: string) => {
-    if (enabledCategories.includes(catName)) {
-      setEnabledCategories(enabledCategories.filter(c => c !== catName));
-    } else {
-      setEnabledCategories([...enabledCategories, catName]);
-    }
+    setEnabledCategories([catName]);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -196,22 +197,21 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
 
             <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700">
               <div className="flex justify-between items-end mb-3">
-                <label className="block text-gray-300 font-bold">Word Categories</label>
-                <span className="text-xs text-gray-400">Select at least one</span>
+                <label className="block text-gray-300 font-bold">Categories</label>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                 {categories.length === 0 && <div className="text-gray-500 italic">Loading categories...</div>}
                 {categories.map(cat => (
                   <label key={cat._id} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-600 cursor-pointer hover:border-gray-500 transition">
                     <input 
-                      type="checkbox"
+                      type="radio"
+                      name="categorySelect"
                       checked={enabledCategories.includes(cat.name)}
                       onChange={() => handleToggleCategory(cat.name)}
                       className="w-5 h-5 rounded bg-gray-900 border-gray-500 text-green-500 focus:ring-green-500 focus:ring-offset-gray-800"
                     />
                     <div className="flex flex-col">
                       <span className="text-white font-medium">{cat.name}</span>
-                      <span className="text-xs text-gray-400">{cat.words.length} words</span>
                     </div>
                   </label>
                 ))}
