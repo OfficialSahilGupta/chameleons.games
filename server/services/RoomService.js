@@ -82,6 +82,27 @@ class RoomService {
     return room.save();
   }
 
+  async leaveRoom(code, userId) {
+    const room = await this.getRoomByCode(code);
+    if (!room) throw new Error('Room not found');
+
+    const initialLength = room.players.length;
+    room.players = room.players.filter(p => p.userId._id.toString() !== userId.toString());
+
+    if (room.players.length === 0) {
+      // Room empty, delete it?
+      room.status = 'finished'; // Or delete
+    } else if (room.hostId._id.toString() === userId.toString()) {
+      // Host migration
+      room.hostId = room.players[0].userId;
+    }
+
+    if (initialLength !== room.players.length) {
+      return room.save();
+    }
+    return room;
+  }
+
   async toggleReady(code, userId, isReady) {
     const room = await this.getRoomByCode(code);
     if (!room) throw new Error('Room not found');
