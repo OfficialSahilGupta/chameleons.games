@@ -239,6 +239,39 @@ io.on('connection', (socket) => {
   });
 });
 
+// Periodic Room Cleanup Job (Runs every 2 minutes)
+setInterval(async () => {
+  try {
+    const Room = require('./models/Room');
+    const allRooms = await Room.find({ status: { $ne: 'finished' } });
+    
+    let cleanedCount = 0;
+    for (const room of allRooms) {
+      const roomClients = io.sockets.adapter.rooms.get(`room:${room.code}`);
+      if (!roomClients || roomClients.size === 0) {
+        // No active socket connections for this room
+        // If it's empty or inactive, mark it as finished or delete it
+        room.status = 'finished';
+        await room.save();
+        
+        // Also cleanup game engine if it was active
+        const engine = require('./services/GameEngine');
+        if (engine.ACTIVE_GAMES) {
+          engine.ACTIVE_GAMES.delete(room.code);
+        }
+        cleanedCount++;
+      }
+    }
+    
+    if (cleanedCount > 0) {
+      console.log(`[Cleanup] Finished ${cleanedCount} inactive rooms.`);
+      broadcastRooms();
+    }
+  } catch (err) {
+    console.error('Room cleanup error:', err);
+  }
+}, 2 * 60 * 1000); // 2 minutes
+
 const PORT = process.env.PORT || 4001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

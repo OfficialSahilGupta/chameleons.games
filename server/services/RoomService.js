@@ -16,6 +16,11 @@ class RoomService {
   }
 
   async createRoom(hostId, roomData) {
+    const existingRoom = await Room.findOne({ hostId, status: { $ne: 'finished' } });
+    if (existingRoom) {
+      throw new Error('You are already hosting an active room. Leave or wait for it to finish before creating another.');
+    }
+
     const code = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6 chars
     const room = new Room({
       code,

@@ -440,5 +440,7 @@ module.exports = {
     if (!instance) instance = new GameEngine(io);
     return instance;
   },
-  getInstance: () => instance
+  getInstance: () => instance,
+  ACTIVE_GAMES,
+  GameEngine
 };
