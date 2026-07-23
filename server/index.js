@@ -78,6 +78,60 @@ io.on('connection', (socket) => {
     }
   });
 
+  const emitRoomState = async (code) => {
+    try {
+      const room = await roomService.getRoomByCode(code);
+      if (room) {
+        io.to(`room:${code}`).emit('room:stateUpdated', room);
+      }
+    } catch (err) {
+      console.error('Error emitting room state:', err);
+    }
+  };
+
+  socket.on('room:get', async ({ code }, callback) => {
+    try {
+      const room = await roomService.getRoomByCode(code);
+      // Join the socket room if they haven't already (e.g. page refresh)
+      socket.join(`room:${code}`);
+      if (callback) callback({ success: true, room });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
+  socket.on('room:updateSettings', async ({ code, settings }, callback) => {
+    try {
+      await roomService.updateRoomSettings(code, socket.user.id, settings);
+      emitRoomState(code);
+      broadcastRooms(); // Update lobby
+      if (callback) callback({ success: true });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
+  socket.on('room:toggleReady', async ({ code, isReady }, callback) => {
+    try {
+      await roomService.toggleReady(code, socket.user.id, isReady);
+      emitRoomState(code);
+      if (callback) callback({ success: true });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
+  socket.on('room:startGame', async ({ code }, callback) => {
+    try {
+      await roomService.startGame(code, socket.user.id);
+      emitRoomState(code);
+      broadcastRooms(); // Update lobby
+      if (callback) callback({ success: true });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
     // Handle player disconnect from active rooms later...

@@ -63,6 +63,46 @@ class RoomService {
     
     return room.save();
   }
+
+  async updateRoomSettings(code, hostId, newSettings) {
+    const room = await this.getRoomByCode(code);
+    if (!room) throw new Error('Room not found');
+    if (room.hostId._id.toString() !== hostId.toString()) throw new Error('Only the host can update settings');
+
+    room.settings = { ...room.settings, ...newSettings };
+    return room.save();
+  }
+
+  async toggleReady(code, userId, isReady) {
+    const room = await this.getRoomByCode(code);
+    if (!room) throw new Error('Room not found');
+    
+    const player = room.players.find(p => p.userId._id.toString() === userId.toString());
+    if (player) {
+      player.isReady = isReady;
+      return room.save();
+    }
+    throw new Error('Player not in room');
+  }
+
+  async startGame(code, hostId) {
+    const room = await this.getRoomByCode(code);
+    if (!room) throw new Error('Room not found');
+    if (room.hostId._id.toString() !== hostId.toString()) throw new Error('Only the host can start the game');
+
+    if (room.players.length < room.settings.minPlayers) {
+      throw new Error(`Need at least ${room.settings.minPlayers} players`);
+    }
+
+    const allReady = room.players.every(p => p.isReady || p.userId._id.toString() === hostId.toString());
+    if (!allReady) {
+      throw new Error('All players must be ready');
+    }
+
+    room.status = 'in_progress';
+    room.currentRound = 1;
+    return room.save();
+  }
 }
 
 module.exports = new RoomService();
