@@ -47,6 +47,13 @@ export default function Room() {
       setGamePhase(state.phase);
     });
 
+    newSocket.on('room:kicked', ({ kickedUserId }) => {
+      if (user.id === kickedUserId) {
+        alert('You were kicked by the host.');
+        navigate('/lobby');
+      }
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -88,6 +95,11 @@ export default function Room() {
     socket?.emit('room:startGame', { code }, (res: any) => {
       if (!res.success) alert(res.message);
     });
+  };
+
+  const handleKickPlayer = (targetUserId: string) => {
+    if (!isHost) return;
+    socket?.emit('room:kickPlayer', { code, targetUserId });
   };
 
   const allReady = room.players.every((p: any) => p.isReady || p.userId._id === room.hostId._id);
@@ -140,10 +152,21 @@ export default function Room() {
                           className="w-12 h-12 rounded-full bg-gray-800"
                         />
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-lg">{p.userId.username}</span>
-                            {isPlayerHost && <span title="Host" className="text-yellow-400">👑</span>}
-                            {p.userId._id === user?.id && <span className="text-xs text-gray-400">(You)</span>}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-lg">{p.userId.username}</span>
+                              {isPlayerHost && <span title="Host" className="text-yellow-400">👑</span>}
+                              {p.userId._id === user?.id && <span className="text-xs text-gray-400">(You)</span>}
+                            </div>
+                            {isHost && !isPlayerHost && room.status === 'lobby' && (
+                              <button 
+                                onClick={() => handleKickPlayer(p.userId._id)}
+                                className="text-xs bg-red-900/50 hover:bg-red-600 text-red-200 border border-red-800 hover:border-red-500 px-2 py-1 rounded transition"
+                                title="Kick Player"
+                              >
+                                Kick
+                              </button>
+                            )}
                           </div>
                           <div className="text-sm">
                             {isPlayerHost ? (

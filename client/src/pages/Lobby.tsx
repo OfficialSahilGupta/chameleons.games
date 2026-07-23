@@ -142,7 +142,7 @@ export default function Lobby() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* Main Room List */}
           <div className="flex-1 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">

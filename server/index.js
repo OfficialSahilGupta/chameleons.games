@@ -147,6 +147,22 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('room:kickPlayer', async ({ code, targetUserId }) => {
+    try {
+      const room = await roomService.getRoomByCode(code);
+      if (room && room.hostId._id.toString() === socket.user.id) {
+        if (room.status === 'lobby') {
+          await roomService.leaveRoom(code, targetUserId);
+          emitRoomState(code);
+          broadcastRooms();
+          io.to(`room:${code}`).emit('room:kicked', { kickedUserId: targetUserId });
+        }
+      }
+    } catch (err) {
+      console.error('Error kicking player:', err);
+    }
+  });
+
   socket.on('room:playAgain', async ({ code }, callback) => {
     try {
       await roomService.resetRoom(code, socket.user.id);
