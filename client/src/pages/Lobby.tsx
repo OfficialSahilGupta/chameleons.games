@@ -14,6 +14,9 @@ export default function Lobby() {
   // Filters
   const [filterJoinable, setFilterJoinable] = useState(false);
   const [filterCategory, setFilterCategory] = useState('');
+  
+  // UI States
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (!token || !user) {
@@ -53,12 +56,14 @@ export default function Lobby() {
 
   const createRoom = (settings: any) => {
     if (!socket) return;
+    setErrorMsg('');
     socket.emit('rooms:create', settings, (response: any) => {
       if (response.success) {
         setIsCreateModalOpen(false);
         navigate(`/room/${response.roomCode}`);
       } else {
-        alert('Failed to create room: ' + response.message);
+        setErrorMsg(response.message);
+        setIsCreateModalOpen(false); // Close modal so they can see the error
       }
     });
   };
@@ -75,11 +80,12 @@ export default function Lobby() {
 
   const joinRoom = (code: string) => {
     if (!socket) return;
+    setErrorMsg('');
     socket.emit('rooms:join', { code }, (response: any) => {
       if (response.success) {
         navigate(`/room/${response.roomCode}`);
       } else {
-        alert('Failed to join room: ' + response.message);
+        setErrorMsg(response.message);
       }
     });
   };
@@ -115,21 +121,28 @@ export default function Lobby() {
             {user?.isAdmin && (
               <button 
                 onClick={() => navigate('/admin')}
-                className="text-sm bg-purple-600 hover:bg-purple-500 py-2 px-4 rounded transition"
+                className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded transition"
               >
-                Admin
+                Admin Panel
               </button>
             )}
             <button 
               onClick={handleLogout}
-              className="text-sm bg-red-600 hover:bg-red-500 py-2 px-4 rounded transition"
+              className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition"
             >
               Logout
             </button>
           </div>
         </header>
 
-        <div className="flex flex-col md:flex-row gap-6">
+        {errorMsg && (
+          <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-8 flex justify-between items-center animate-shake">
+            <span className="font-semibold">{errorMsg}</span>
+            <button onClick={() => setErrorMsg('')} className="text-red-400 hover:text-red-200 text-xl leading-none">&times;</button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Room List */}
           <div className="flex-1 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
