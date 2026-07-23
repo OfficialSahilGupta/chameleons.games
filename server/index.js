@@ -54,6 +54,8 @@ const broadcastRooms = async () => {
   io.emit('rooms:update', rooms);
 };
 
+const socketRooms = new Map();
+
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}, User: ${socket.user?.username}`);
   
@@ -64,6 +66,7 @@ io.on('connection', (socket) => {
     try {
       const room = await roomService.createRoom(socket.user.id, roomData);
       socket.join(`room:${room.code}`);
+      socketRooms.set(socket.id, room.code);
       broadcastRooms();
       if (callback) callback({ success: true, roomCode: room.code });
     } catch (err) {
@@ -75,6 +78,7 @@ io.on('connection', (socket) => {
     try {
       const room = await roomService.joinRoom(code, socket.user.id);
       socket.join(`room:${room.code}`);
+      socketRooms.set(socket.id, room.code);
       broadcastRooms();
       await chatService.addSystemMessage(code, `${socket.user.username} joined the room`);
       if (callback) callback({ success: true, roomCode: room.code });
@@ -98,7 +102,13 @@ io.on('connection', (socket) => {
     try {
       const room = await roomService.getRoomByCode(code);
       socket.join(`room:${code}`);
+      socketRooms.set(socket.id, code);
       if (callback) callback({ success: true, room });
+
+      // Send current game state if in progress
+      if (room.status === 'in_progress' || room.status === 'finished') {
+        engine.sendStateToUser(code, socket.id, socket.user.id);
+      }
     } catch (err) {
       if (callback) callback({ success: false, message: err.message });
     }
@@ -184,8 +194,48 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('user:updateAvatar', async ({ seed }, callback) => {
+    try {
+      const User = require('./models/User');
+      const user = await User.findById(socket.user.id);
+      if (user) {
+        user.avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+        await user.save();
+        
+        // Update room state if they are in a room
+        const code = socketRooms.get(socket.id);
+        if (code) {
+          const roomService = require('./services/RoomService');
+          const room = await roomService.getRoomByCode(code);
+          if (room) {
+            const p = room.players.find(p => p.userId._id.toString() === socket.user.id);
+            if (p) {
+              p.userId.avatarUrl = user.avatarUrl; // Update populated obj locally before broadcast
+            }
+            io.to(`room:${code}`).emit('room:stateUpdated', room);
+          }
+        }
+        
+        if (callback) callback({ success: true, avatarUrl: user.avatarUrl });
+      }
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
+  const currentRoom = socketRooms.get(socket.id);
+  if (currentRoom) {
+    engine.handleDisconnect(currentRoom, socket.user?.id);
+    socketRooms.delete(socket.id);
+  }
+
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
+    const code = socketRooms.get(socket.id);
+    if (code && socket.user) {
+      engine.handleDisconnect(code, socket.user.id);
+      socketRooms.delete(socket.id);
+    }
   });
 });
 

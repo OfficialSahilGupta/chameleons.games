@@ -21,7 +21,8 @@ class GameEngine {
     const playersWithScores = room.players.map(p => ({
       id: p.userId._id.toString(),
       username: p.userId.username,
-      score: 0
+      score: 0,
+      isOnline: true
     }));
 
     const gameState = {
@@ -395,10 +396,41 @@ class GameEngine {
       currentRoundNumber: game.currentRoundNumber,
       category: game.category, // Category is public
       players: game.players,
+      settings: game.settings,
       ...extraPayload
     };
     
     this.io.to(`room:${roomCode}`).emit('game:state', sanitizedGame);
+  }
+
+  sendStateToUser(roomCode, socketId, userId) {
+    const game = ACTIVE_GAMES.get(roomCode);
+    if (!game) return;
+
+    const player = game.players.find(p => p.id === userId);
+    if (player) {
+      player.isOnline = true;
+      this.broadcastState(roomCode, game); // Update others that they are online
+
+      // Send the specific private info back to them
+      const isChameleon = game.chameleonId === userId;
+      this.io.to(socketId).emit('word:reveal', {
+        category: game.category,
+        word: isChameleon ? null : game.secretWord,
+        isChameleon
+      });
+    }
+  }
+
+  handleDisconnect(roomCode, userId) {
+    const game = ACTIVE_GAMES.get(roomCode);
+    if (!game) return;
+
+    const player = game.players.find(p => p.id === userId);
+    if (player) {
+      player.isOnline = false;
+      this.broadcastState(roomCode, game);
+    }
   }
 }
 

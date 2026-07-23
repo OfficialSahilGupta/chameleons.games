@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Socket } from 'socket.io-client';
+import confetti from 'canvas-confetti';
+import { playTick, playDing, playSting, playWin } from '../utils/soundFx';
 
 interface GameUIProps {
   socket: Socket | null;
@@ -48,6 +50,23 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
         setSubmittedPlayers(new Set()); // Reset for voting
         setMyVote(null);
       }
+
+      if (state.phase === 'reveal') {
+        if (state.isChameleonEliminated) {
+          playWin();
+          confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        } else {
+          playSting();
+        }
+      }
+
+      if (state.phase === 'chameleon_guess') {
+        playSting();
+      }
+
+      if (state.phase === 'game_over') {
+        confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
+      }
     });
 
     socket.on('word:reveal', (data) => {
@@ -64,10 +83,12 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
 
     socket.on('clue:submitted', (data) => {
       setSubmittedPlayers(prev => new Set(prev).add(data.userId));
+      playDing();
     });
 
     socket.on('vote:submitted', (data) => {
       setSubmittedPlayers(prev => new Set(prev).add(data.userId));
+      playDing();
     });
 
     return () => {
@@ -83,7 +104,13 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   // Timer countdown
   useEffect(() => {
     if (timeLeft > 0) {
-      const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+      const timer = setInterval(() => {
+        setTimeLeft(prev => {
+          const next = prev - 1;
+          if (next > 0 && next <= 5) playTick();
+          return next;
+        });
+      }, 1000);
       return () => clearInterval(timer);
     }
   }, [timeLeft]);
@@ -168,8 +195,8 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 bg-gray-800 rounded-xl p-8 border border-gray-700 shadow-2xl">
-      <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-700">
+    <div className="max-w-4xl mx-auto mt-4 md:mt-8 bg-gray-800 rounded-xl p-4 md:p-8 border border-gray-700 shadow-2xl">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 pb-4 border-b border-gray-700 gap-4">
         <h2 className="text-2xl font-bold text-green-400">Round {gameState.currentRoundNumber}</h2>
         <div className="text-xl font-mono bg-gray-900 px-4 py-2 rounded text-blue-400">
           Phase: {gameState.phase.replace('_', ' ').toUpperCase()}
@@ -203,12 +230,17 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
                       className={`w-12 h-12 rounded-full bg-gray-800 transition ${hasSubmitted ? 'opacity-50' : ''}`}
                     />
                     {hasSubmitted && (
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center animate-pop-in">
                         <span className="text-2xl drop-shadow-md">✅</span>
                       </div>
                     )}
+                    {p.isOnline === false && (
+                      <div className="absolute -top-2 -right-2 bg-red-600 rounded text-xs px-1 font-bold animate-pulse">
+                        Offline
+                      </div>
+                    )}
                   </div>
-                  <span className="text-xs text-gray-400 font-semibold">{p.username}</span>
+                  <span className={`text-xs font-semibold ${p.isOnline === false ? 'text-red-400' : 'text-gray-400'}`}>{p.username}</span>
                 </div>
               );
             })}
@@ -222,21 +254,21 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
             ></div>
           </div>
 
-          <div className="text-center bg-gray-900 p-8 rounded-2xl border border-gray-700 shadow-xl min-h-[160px] flex flex-col justify-center">
+          <div className="text-center bg-gray-900 p-6 md:p-8 rounded-2xl border border-gray-700 shadow-xl min-h-[160px] flex flex-col justify-center animate-flip-in">
             <div className="text-gray-400 mb-2 font-semibold uppercase tracking-widest text-sm">
               Category: <span className="font-bold text-white ml-1">{gameState.category}</span>
             </div>
             {myRoleData?.isChameleon ? (
               <div>
                 <div className="text-gray-400 mb-1">The Secret Word is:</div>
-                <h3 className="text-4xl font-bold text-gray-500 tracking-wider">???????</h3>
-                <p className="text-red-400 font-bold mt-2 text-sm uppercase tracking-wide">You are the Chameleon</p>
+                <h3 className="text-3xl md:text-4xl font-bold text-gray-500 tracking-wider">???????</h3>
+                <p className="text-red-400 font-bold mt-2 text-sm md:text-base uppercase tracking-wide">You are the Chameleon</p>
               </div>
             ) : (
               <div>
                 <div className="text-gray-400 mb-1">The Secret Word is:</div>
-                <h3 className="text-4xl font-bold text-green-400 tracking-wider">{myRoleData?.word}</h3>
-                <p className="text-blue-400 font-bold mt-2 text-sm uppercase tracking-wide">You are a Villager</p>
+                <h3 className="text-3xl md:text-4xl font-bold text-green-400 tracking-wider bg-green-900/30 inline-block px-4 py-2 rounded-lg">{myRoleData?.word}</h3>
+                <p className="text-blue-400 font-bold mt-2 text-sm md:text-base uppercase tracking-wide">You are a Villager</p>
               </div>
             )}
           </div>
@@ -245,7 +277,7 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
             <div className="bg-gray-700 p-6 rounded-xl shadow-lg border border-gray-600">
               <h4 className="font-bold mb-4 text-xl">Clue Box</h4>
               {hasSubmittedClue ? (
-                <div className="text-green-400 font-bold text-center py-8 bg-gray-800 rounded border border-green-500/30">
+                  <div className="text-green-400 font-bold text-center py-8 bg-gray-800 rounded border border-green-500/30 animate-pop-in">
                   Clue submitted! ✅<br/>
                   <span className="text-gray-400 text-sm font-normal">Waiting for others...</span>
                 </div>
@@ -303,17 +335,17 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
 
       {gameState.phase === 'discussion' && (
         <div className="flex flex-col gap-6">
-          <div className="text-center relative">
+          <div className="text-center relative flex flex-col md:block items-center gap-4">
             <h3 className="text-2xl font-bold mb-2">Discussion Phase</h3>
             <p className="text-gray-400">Review the clues and find the Chameleon!</p>
             <button 
               onClick={callVote}
-              className="absolute right-0 top-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition shadow-md"
+              className="md:absolute right-0 top-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition shadow-md w-full md:w-auto"
             >
               Call a Vote Early
             </button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {gameState.fullClues?.map((c: any) => {
               const p = gameState.players.find((player: any) => player.id === c.userId);
               return (
@@ -352,15 +384,20 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
                     <img 
                       src={p.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`} 
                       alt="avatar" 
-                      className={`w-16 h-16 rounded-full bg-gray-800 ${hasVoted ? 'border-2 border-green-500' : ''}`}
+                      className={`w-16 h-16 rounded-full bg-gray-800 ${hasVoted ? 'border-2 border-green-500' : ''} ${p.isOnline === false ? 'opacity-30 grayscale' : ''}`}
                     />
                     {hasVoted && (
-                      <div className="absolute -bottom-2 -right-2 bg-gray-900 rounded-full w-6 h-6 flex items-center justify-center border border-green-500 text-xs shadow-md">
+                      <div className="absolute -bottom-2 -right-2 bg-gray-900 rounded-full w-6 h-6 flex items-center justify-center border border-green-500 text-xs shadow-md animate-pop-in">
                         ✅
                       </div>
                     )}
+                    {p.isOnline === false && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-red-900/80 text-white text-[10px] px-2 py-1 rounded">Offline</span>
+                      </div>
+                    )}
                   </div>
-                  <span className="font-bold mt-2">{p.username}</span>
+                  <span className={`font-bold mt-2 ${p.isOnline === false ? 'text-red-400 line-through' : ''}`}>{p.username}</span>
                 </button>
               );
             })}
@@ -369,11 +406,11 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
       )}
 
       {gameState.phase === 'chameleon_guess' && (
-        <div className="text-center py-12 flex flex-col gap-6">
-          <h3 className="text-4xl font-bold text-red-500">The Chameleon was caught!</h3>
-          <p className="text-gray-300 text-lg">But wait... they have one chance to guess the secret word and steal the points.</p>
+        <div className="text-center py-6 md:py-12 flex flex-col gap-6">
+          <h3 className="text-3xl md:text-4xl font-bold text-red-500">The Chameleon was caught!</h3>
+          <p className="text-gray-300 text-base md:text-lg">But wait... they have one chance to guess the secret word and steal the points.</p>
           
-          <div className="bg-gray-900 p-8 rounded-xl border border-gray-700 inline-block mx-auto min-w-[300px]">
+          <div className="bg-gray-900 p-6 md:p-8 rounded-xl border border-gray-700 inline-block mx-auto w-full md:min-w-[300px]">
             {myRoleData?.isChameleon ? (
               <form onSubmit={submitGuess} className="flex flex-col gap-4">
                 <label className="font-bold text-xl text-white">What is the secret word?</label>
@@ -403,12 +440,12 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
       )}
 
       {gameState.phase === 'reveal' && (
-        <div className="text-center py-12 flex flex-col gap-6">
-          <h3 className="text-5xl font-bold mb-2">Round Over</h3>
-          <div className="bg-gray-900 p-8 rounded-xl border border-gray-700 inline-block mx-auto min-w-[400px]">
+        <div className="text-center py-6 md:py-12 flex flex-col gap-6">
+          <h3 className="text-4xl md:text-5xl font-bold mb-2">Round Over</h3>
+          <div className={`bg-gray-900 p-6 md:p-8 rounded-xl border border-gray-700 inline-block mx-auto w-full md:min-w-[400px] shadow-2xl ${gameState.isChameleonEliminated ? '' : 'animate-shake border-red-500'}`}>
             {gameState.isChameleonEliminated ? (
               <div className="flex flex-col gap-4">
-                <div className="text-green-400 text-3xl font-bold">The Villagers caught the Chameleon!</div>
+                <div className="text-green-400 text-2xl md:text-3xl font-bold animate-pop-in">The Villagers caught the Chameleon!</div>
                 {gameState.chameleonGuessedCorrectly === true && (
                   <div className="text-red-400 text-xl font-bold mt-2 border-t border-gray-700 pt-4">
                     ...but the Chameleon correctly guessed the word!

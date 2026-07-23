@@ -63,6 +63,16 @@ export default function Lobby() {
     });
   };
 
+  const randomizeAvatar = () => {
+    if (!socket || !user) return;
+    const seed = Math.random().toString(36).substring(7);
+    socket.emit('user:updateAvatar', { seed }, (response: any) => {
+      if (response.success) {
+        useAuthStore.getState().setAuth(token, { ...user, avatarUrl: response.avatarUrl });
+      }
+    });
+  };
+
   const joinRoom = (code: string) => {
     if (!socket) return;
     socket.emit('rooms:join', { code }, (response: any) => {
@@ -90,11 +100,16 @@ export default function Lobby() {
           <h1 className="text-4xl font-bold text-green-400">Chameleon Lobby</h1>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-gray-800 py-2 px-4 rounded-full border border-gray-700">
-              <img 
-                src={user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`} 
-                alt="avatar" 
-                className="w-8 h-8 rounded-full bg-gray-700"
-              />
+              <div className="relative group cursor-pointer" onClick={randomizeAvatar} title="Click to randomize avatar">
+                <img 
+                  src={user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`} 
+                  alt="avatar" 
+                  className="w-8 h-8 rounded-full bg-gray-700 transition group-hover:opacity-50"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <span className="text-xs">🎲</span>
+                </div>
+              </div>
               <span className="font-semibold text-gray-200">{user?.username}</span>
             </div>
             {user?.isAdmin && (
