@@ -59,6 +59,10 @@ const socketRooms = new Map();
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}, User: ${socket.user?.username}`);
   
+  if (socket.user && socket.user.id) {
+    socket.join(`user:${socket.user.id}`);
+  }
+  
   // Send initial room list when user connects
   broadcastRooms();
   
