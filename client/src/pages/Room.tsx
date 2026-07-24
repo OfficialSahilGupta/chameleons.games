@@ -179,11 +179,11 @@ export default function Room() {
       </header>
 
       {/* MAIN LAYOUT */}
-      <div className="flex-1 overflow-hidden p-6 md:p-8 z-10 flex flex-col">
-        <div className="max-w-7xl mx-auto w-full h-full grid grid-cols-1 lg:grid-cols-10 gap-8 min-h-0">
+      <div className="flex-1 overflow-y-auto lg:overflow-hidden p-6 md:p-8 z-10 flex flex-col">
+        <div className="max-w-7xl mx-auto w-full lg:h-full flex flex-col lg:grid lg:grid-cols-10 lg:grid-rows-1 gap-8 min-h-0">
           
           {/* Main Content Area */}
-          <div className="lg:col-span-7 flex flex-col min-h-[60vh] lg:min-h-0 h-full">
+          <div className="lg:col-span-7 flex flex-col h-[700px] lg:h-full min-h-0">
             {room.status !== 'lobby' ? (
               <GameUI socket={socket} code={code as string} user={user} room={room} />
             ) : (
