@@ -59,6 +59,7 @@ export default function Lobby() {
   };
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
   const createRoom = (settings: any) => {
     if (!socket) return;
@@ -189,27 +190,46 @@ export default function Lobby() {
                       checked={filterJoinable} 
                       onChange={e => setFilterJoinable(e.target.checked)}
                     />
-                    <div className={`w-10 h-5 rounded-full relative transition-colors duration-300 ${filterJoinable ? 'bg-green-500/20 border border-green-500' : 'bg-black/30 border border-white/10'}`}>
-                      <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full transition-all duration-300 ${filterJoinable ? 'left-5.5 bg-green-400 shadow-[0_0_10px_rgba(74,222,128,1)]' : 'left-1 bg-gray-500'}`} style={{ transform: filterJoinable ? 'translateX(18px)' : 'translateX(0)' }} />
+                    <div className={`w-10 h-5 rounded-full relative transition-colors duration-300 box-content ${filterJoinable ? 'bg-green-500/20 border border-green-500' : 'bg-black/30 border border-white/10'}`}>
+                      <div className={`absolute top-[1px] w-4 h-4 rounded-full transition-all duration-300 ${filterJoinable ? 'left-[21px] bg-green-400 shadow-[0_0_10px_rgba(74,222,128,1)]' : 'left-[1px] bg-gray-500'}`} />
                     </div>
                     <span className="text-xs font-bold tracking-widest uppercase text-gray-400 group-hover:text-gray-200 transition">Joinable</span>
                   </label>
 
-                  {/* Custom Glass Select */}
+                  {/* Custom Glass Dropdown */}
                   <div className="relative group">
-                    <select 
-                      value={filterCategory} 
-                      onChange={e => setFilterCategory(e.target.value)}
-                      className="appearance-none bg-black/20 border border-white/10 rounded-full px-5 py-2 text-xs font-bold tracking-widest text-gray-300 focus:outline-none focus:border-green-500 cursor-pointer hover:bg-white/5 transition pr-10"
+                    <button 
+                      onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                      className="flex items-center gap-2 bg-black/20 border border-white/10 rounded-full px-5 py-2 text-xs font-bold tracking-widest text-gray-300 focus:outline-none focus:border-green-500 cursor-pointer hover:bg-white/5 transition min-w-[160px] justify-between"
                     >
-                      <option value="" className="bg-gray-900">ALL CATEGORIES</option>
-                      {activeCategories.map(cat => (
-                        <option key={cat} value={cat} className="bg-gray-900">{cat.toUpperCase()}</option>
-                      ))}
-                    </select>
-                    <svg className="absolute right-4 top-2.5 w-3 h-3 text-gray-500 pointer-events-none group-hover:text-green-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                      <span>{filterCategory ? filterCategory.toUpperCase() : "ALL CATEGORIES"}</span>
+                      <svg className={`w-3 h-3 text-gray-500 transition-transform ${isCategoryDropdownOpen ? 'rotate-180 text-green-400' : 'group-hover:text-green-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {isCategoryDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setIsCategoryDropdownOpen(false)}></div>
+                        <div className="absolute right-0 mt-2 w-full min-w-[180px] bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-20 shadow-[0_10px_40px_rgba(0,0,0,0.8)] animate-[fade-up_0.15s_ease-out]">
+                          <div 
+                            onClick={() => { setFilterCategory(""); setIsCategoryDropdownOpen(false); }}
+                            className={`px-4 py-3 text-xs font-bold tracking-widest cursor-pointer transition-colors ${filterCategory === "" ? 'bg-green-500/20 text-green-400 border-l-2 border-green-500' : 'text-gray-300 hover:bg-white/5 border-l-2 border-transparent'}`}
+                          >
+                            ALL CATEGORIES
+                          </div>
+                          {activeCategories.map(cat => (
+                            <div 
+                              key={cat}
+                              onClick={() => { setFilterCategory(cat); setIsCategoryDropdownOpen(false); }}
+                              className={`px-4 py-3 text-xs font-bold tracking-widest cursor-pointer transition-colors ${filterCategory === cat ? 'bg-green-500/20 text-green-400 border-l-2 border-green-500' : 'text-gray-300 hover:bg-white/5 border-l-2 border-transparent'}`}
+                            >
+                              {cat.toUpperCase()}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
