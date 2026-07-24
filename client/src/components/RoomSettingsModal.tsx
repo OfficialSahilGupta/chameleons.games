@@ -97,7 +97,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            {isCreateMode ? 'INITIALIZE OPERATION' : 'MISSION PARAMETERS'}
+            {isCreateMode ? 'CREATE ROOM' : 'ROOM SETTINGS'}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-white/5 p-2 rounded-full transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -112,7 +112,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
             
             {/* Room Name */}
             <div>
-              <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Operation Designation</label>
+              <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Room Name</label>
               <div className="relative">
                 <input 
                   type="text" 
@@ -145,7 +145,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
 
               {/* Rounds */}
               <div>
-                <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Phase Count</label>
+                <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Number of Rounds</label>
                 <div className="relative">
                   <input 
                     type="number" 
@@ -160,7 +160,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
 
               {/* Timer */}
               <div>
-                <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Action Timer</label>
+                <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Turn Timer</label>
                 <div className="relative group">
                   <select 
                     value={timerSeconds}
@@ -181,7 +181,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
 
               {/* Turn Mode */}
               <div>
-                <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Execution Style</label>
+                <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Turn Mode</label>
                 <div className="relative group">
                   <select 
                     value={turnMode}
@@ -212,7 +212,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                   <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${isPrivate ? 'bg-green-500 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-black/50 border border-white/10 group-hover:border-green-500/50'}`}>
                     {isPrivate && <svg className="w-4 h-4 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                   </div>
-                  <span className="text-white font-bold tracking-wider group-hover:text-green-100 transition-colors">Classified Access (Private)</span>
+                  <span className="text-white font-bold tracking-wider group-hover:text-green-100 transition-colors">Private Room</span>
                 </label>
                 {isPrivate && (
                   <div className="relative mt-2 ml-10">
@@ -220,7 +220,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                       type="text" 
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      placeholder="SET CLEARANCE CODE..."
+                      placeholder="SET PASSWORD..."
                       className="w-full bg-black/40 border border-white/10 rounded-lg p-3 focus:outline-none focus:border-green-500 text-white font-mono text-sm tracking-widest uppercase transition-all peer"
                     />
                     <div className="absolute inset-0 rounded-lg pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_10px_rgba(34,197,94,0.1)] transition-all" />
@@ -239,16 +239,16 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                   <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${allowSpectators ? 'bg-green-500 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-black/50 border border-white/10 group-hover:border-green-500/50'}`}>
                     {allowSpectators && <svg className="w-4 h-4 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                   </div>
-                  <span className="text-white font-bold tracking-wider group-hover:text-green-100 transition-colors">Permit Observers</span>
+                  <span className="text-white font-bold tracking-wider group-hover:text-green-100 transition-colors">Allow Spectators</span>
                 </label>
               </div>
             </div>
 
             {/* Categories */}
             <div>
-              <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-3">Target Files (Categories)</label>
+              <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-3">Categories</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {categories.length === 0 && <div className="text-gray-500 italic text-sm">Deciphering files...</div>}
+                {categories.length === 0 && <div className="text-gray-500 italic text-sm">Loading categories...</div>}
                 {categories.map(cat => {
                   const isSelected = enabledCategories.includes(cat.name);
                   return (
@@ -278,14 +278,14 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
             onClick={onClose}
             className="px-6 py-3 rounded-xl font-bold tracking-widest uppercase text-xs border border-white/10 hover:border-white/30 hover:bg-white/5 text-gray-300 transition-all"
           >
-            Abort
+            Cancel
           </button>
           <button 
             type="submit" 
             form="room-settings-form"
             className="px-8 py-3 rounded-xl font-bold tracking-widest uppercase text-xs bg-green-500 hover:bg-green-400 text-black shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(74,222,128,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            {isCreateMode ? 'LAUNCH OPERATION' : 'UPDATE PARAMETERS'}
+            {isCreateMode ? 'CREATE ROOM' : 'SAVE SETTINGS'}
           </button>
         </div>
       </div>

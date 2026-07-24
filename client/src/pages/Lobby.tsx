@@ -147,7 +147,7 @@ export default function Lobby() {
         <div className="flex items-center group cursor-pointer relative" onClick={() => navigate('/')}>
           <div className="font-black text-2xl tracking-[0.2em] text-transparent bg-clip-text animate-camouflage"
             style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'12\' height=\'12\' viewBox=\'0 0 12 12\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M6 0a6 6 0 0 0-6 6 6 6 0 0 0 6 6 6 6 0 0 0 6-6 6 6 0 0 0-6-6zm0 1.5a4.5 4.5 0 0 1 4.5 4.5 4.5 4.5 0 0 1-4.5 4.5 4.5 4.5 0 0 1-4.5-4.5 4.5 4.5 0 0 1 4.5-4.5z\' fill=\'%23ffffff\' fill-opacity=\'0.15\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(to right, #4ade80, #60a5fa, #a855f7)' }}>
-            THE ENCLAVE
+            CHAMELEON LOBBY
           </div>
         </div>
 
@@ -158,7 +158,7 @@ export default function Lobby() {
             </button>
           )}
           <button onClick={handleLogout} className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-red-400 transition-colors">
-            Abandon
+            Logout
           </button>
         </div>
       </header>
@@ -178,7 +178,7 @@ export default function Lobby() {
 
             <div className="glass-panel rounded-2xl p-6 md:p-8 flex-1 min-h-[60vh]">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                <h2 className="text-2xl font-bold tracking-wider">ACTIVE MISSIONS <span className="text-green-500 text-lg ml-2">({filteredRooms.length})</span></h2>
+                <h2 className="text-2xl font-bold tracking-wider">ACTIVE ROOMS <span className="text-green-500 text-lg ml-2">({filteredRooms.length})</span></h2>
                 
                 <div className="flex flex-wrap gap-4 items-center">
                   {/* Custom Toggle Checkbox */}
@@ -217,7 +217,7 @@ export default function Lobby() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredRooms.length === 0 ? (
                   <div className="col-span-full text-center py-16 text-gray-500 font-light tracking-wide border border-dashed border-white/5 rounded-xl bg-black/10">
-                    {rooms.length === 0 ? "NO MISSIONS AVAILABLE. BE THE FIRST TO CREATE ONE." : "NO MISSIONS MATCH YOUR CLEARANCE FILTERS."}
+                    {rooms.length === 0 ? "NO ROOMS AVAILABLE. BE THE FIRST TO CREATE ONE." : "NO ROOMS MATCH YOUR FILTERS."}
                   </div>
                 ) : (
                   filteredRooms.map(room => (
@@ -233,18 +233,18 @@ export default function Lobby() {
                           <h3 className="font-bold text-lg text-white truncate max-w-[150px]">{room.name}</h3>
                         </div>
                         <span className={`text-[10px] px-2 py-1 rounded font-bold tracking-widest uppercase ${room.status === 'lobby' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                          {room.status === 'lobby' ? 'RECRUITING' : 'IN PROGRESS'}
+                          {room.status === 'lobby' ? 'WAITING' : 'PLAYING'}
                         </span>
                       </div>
                       
                       <div className="text-xs text-gray-500 mb-4 z-10">
-                        Agent: <span className="text-gray-300">{room.hostId?.username || 'Unknown'}</span>
+                        Host: <span className="text-gray-300">{room.hostId?.username || 'Unknown'}</span>
                       </div>
 
                       {/* Bottom action row */}
                       <div className="flex justify-between items-end mt-auto z-10">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-500 tracking-widest uppercase">Capacity</span>
+                          <span className="text-[10px] text-gray-500 tracking-widest uppercase">Players</span>
                           <span className="font-mono text-lg text-gray-200">{room.players.length}<span className="text-gray-600">/{room.settings.maxPlayers}</span></span>
                         </div>
                         <button 
@@ -271,7 +271,7 @@ export default function Lobby() {
             <div className="glass-panel rounded-2xl p-6 relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-500 to-transparent opacity-50" />
               <div className="flex items-center gap-4 mb-2">
-                <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={randomizeAvatar} title="Randomize Disguise">
+                <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={randomizeAvatar} title="Randomize Avatar">
                   <div className="w-14 h-14 rounded-full bg-black/40 border border-white/10 flex items-center justify-center overflow-hidden">
                     <img 
                       src={user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`} 
@@ -284,7 +284,7 @@ export default function Lobby() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Current Alias</div>
+                  <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Your Profile</div>
                   <div className="text-xl font-black tracking-wide text-white">{user?.username}</div>
                 </div>
               </div>
@@ -292,19 +292,19 @@ export default function Lobby() {
 
             {/* Initiate Operation */}
             <div className="glass-panel rounded-2xl p-6">
-              <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mb-4">Host Operation</h3>
+              <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mb-4">Host a Game</h3>
               <button 
                 onClick={() => setIsCreateModalOpen(true)}
                 className="w-full bg-green-500 hover:bg-green-400 text-black font-black py-4 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(74,222,128,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                <span>INITIATE ROOM</span>
+                <span>CREATE ROOM</span>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
               </button>
             </div>
 
             {/* Infiltrate Room */}
             <div className="glass-panel rounded-2xl p-6">
-              <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mb-4">Infiltrate Private Room</h3>
+              <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mb-4">Join Private Room</h3>
               <form 
                 onSubmit={(e) => { e.preventDefault(); joinRoom(joinCode); }}
                 className="flex flex-col gap-3"
@@ -325,7 +325,7 @@ export default function Lobby() {
                   disabled={joinCode.length !== 6}
                   className="w-full border border-white/20 hover:border-white/50 hover:bg-white/5 disabled:opacity-50 disabled:hover:border-white/20 disabled:hover:bg-transparent font-bold tracking-widest py-3 px-4 rounded-xl transition-all text-sm uppercase"
                 >
-                  Confirm Code
+                  Join Room
                 </button>
               </form>
             </div>
