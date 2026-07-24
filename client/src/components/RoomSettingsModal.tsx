@@ -22,7 +22,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
   const [allowSpectators, setAllowSpectators] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:4001/api/categories')
+    fetch((import.meta.env.PROD ? "" : "http://localhost:4001") + '/api/categories')
       .then(res => res.json())
       .then(data => {
         const sortedData = data.sort((a: any, b: any) => {

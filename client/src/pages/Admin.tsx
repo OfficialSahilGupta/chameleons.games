@@ -20,7 +20,7 @@ export default function Admin() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://localhost:4001/api/admin/categories', {
+      const res = await fetch((import.meta.env.PROD ? "" : "http://localhost:4001") + '/api/admin/categories', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -34,7 +34,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newCategoryName) return;
     try {
-      await fetch('http://localhost:4001/api/admin/categories', {
+      await fetch((import.meta.env.PROD ? "" : "http://localhost:4001") + '/api/admin/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: newCategoryName })
@@ -48,7 +48,7 @@ export default function Admin() {
 
   const toggleCategory = async (id: string, isActive: boolean) => {
     try {
-      await fetch(`http://localhost:4001/api/admin/categories/${id}`, {
+      await fetch(`${import.meta.env.PROD ? "" : "http://localhost:4001"}/api/admin/categories/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ isActive: !isActive })
@@ -64,7 +64,7 @@ export default function Admin() {
     if (!selectedCategory || !newWordsInput) return;
     const wordsArray = newWordsInput.split(/[\n,]+/).map(w => w.trim()).filter(w => w);
     try {
-      await fetch(`http://localhost:4001/api/admin/categories/${selectedCategory._id}/words`, {
+      await fetch(`${import.meta.env.PROD ? "" : "http://localhost:4001"}/api/admin/categories/${selectedCategory._id}/words`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ words: wordsArray })
@@ -81,7 +81,7 @@ export default function Admin() {
 
   const toggleWord = async (categoryId: string, wordId: string, isActive: boolean) => {
     try {
-      await fetch(`http://localhost:4001/api/admin/categories/${categoryId}/words/${wordId}`, {
+      await fetch(`${import.meta.env.PROD ? "" : "http://localhost:4001"}/api/admin/categories/${categoryId}/words/${wordId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ isActive: !isActive })

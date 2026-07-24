@@ -23,7 +23,7 @@ export default function Room() {
       return;
     }
 
-    const newSocket = io('http://localhost:4001', {
+    const newSocket = io(import.meta.env.PROD ? "" : "http://localhost:4001", {
       auth: { token },
     });
     setSocket(newSocket);

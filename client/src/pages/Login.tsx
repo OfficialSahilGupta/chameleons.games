@@ -16,7 +16,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:4001/api/auth/guest', {
+      const response = await fetch((import.meta.env.PROD ? "" : "http://localhost:4001") + '/api/auth/guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username }),
@@ -44,7 +44,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:4001/api/auth/register', {
+      const response = await fetch((import.meta.env.PROD ? "" : "http://localhost:4001") + '/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -72,7 +72,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:4001/api/auth/login', {
+      const response = await fetch((import.meta.env.PROD ? "" : "http://localhost:4001") + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
