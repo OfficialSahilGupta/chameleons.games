@@ -87,7 +87,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={onClose} />
       
       {/* Modal */}
-      <div className="relative w-full max-w-2xl bg-black/40 border border-white/10 rounded-2xl shadow-[0_0_80px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all">
+      <div className="relative w-full max-w-2xl bg-slate-900/60 border border-slate-700/50 rounded-2xl shadow-[0_0_80px_rgba(15,23,42,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all">
         {/* Top accent line */}
         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500/80 to-transparent" />
 
@@ -120,7 +120,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                   onChange={e => setName(e.target.value)}
                   required
                   maxLength={30}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl p-4 focus:outline-none focus:border-green-500 focus:bg-black/40 text-white font-mono text-lg transition-all peer"
+                  className="w-full bg-slate-800/40 border border-slate-600/30 rounded-xl p-4 focus:outline-none focus:border-green-500 focus:bg-slate-800/60 text-white font-mono text-lg transition-all peer"
                   placeholder="e.g. ALPHA SITE"
                 />
                 <div className="absolute inset-0 rounded-xl pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_15px_rgba(34,197,94,0.1)] transition-all" />
@@ -133,13 +133,13 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                 <label className="block text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-2">Capacity (2-20)</label>
                 <div className="relative">
                   <input 
-                    type="number" 
-                    min="2" max="20" 
+                    type="range" 
+                    min="3" max="20" 
                     value={maxPlayers}
                     onChange={e => setMaxPlayers(parseInt(e.target.value))}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl p-4 focus:outline-none focus:border-green-500 focus:bg-black/40 text-white font-mono text-lg transition-all peer"
+                    className="w-full accent-green-500 h-2 bg-slate-800/50 rounded-lg appearance-none cursor-pointer"
                   />
-                  <div className="absolute inset-0 rounded-xl pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_15px_rgba(34,197,94,0.1)] transition-all" />
+                  <div className="text-white text-xs mt-2">{maxPlayers} players</div>
                 </div>
               </div>
 
@@ -152,7 +152,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                     min="1" max="10" 
                     value={roundCount}
                     onChange={e => setRoundCount(parseInt(e.target.value))}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl p-4 focus:outline-none focus:border-green-500 focus:bg-black/40 text-white font-mono text-lg transition-all peer"
+                    className="w-full bg-slate-800/40 border border-slate-600/30 rounded-xl p-3 focus:outline-none focus:border-green-500 focus:bg-slate-800/60 text-white font-mono text-center text-lg transition-all peer"
                   />
                   <div className="absolute inset-0 rounded-xl pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_15px_rgba(34,197,94,0.1)] transition-all" />
                 </div>
@@ -165,12 +165,12 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                   <select 
                     value={timerSeconds}
                     onChange={e => setTimerSeconds(parseInt(e.target.value))}
-                    className="appearance-none w-full bg-black/20 border border-white/10 rounded-xl p-4 focus:outline-none focus:border-green-500 focus:bg-black/40 text-white font-mono text-lg transition-all cursor-pointer peer"
+                    className="w-full bg-slate-800/40 border border-slate-600/30 rounded-xl p-3 focus:outline-none focus:border-green-500 cursor-pointer text-white font-mono text-center text-lg appearance-none hover:bg-slate-800/60 transition-colors"
                   >
-                    <option value="15" className="bg-gray-900">15s (Blitz)</option>
-                    <option value="30" className="bg-gray-900">30s (Standard)</option>
-                    <option value="45" className="bg-gray-900">45s (Tactical)</option>
-                    <option value="60" className="bg-gray-900">60s (Deliberate)</option>
+                    <option value="15" className="bg-slate-900 text-white">15s</option>
+                    <option value="30" className="bg-slate-900 text-white">30s</option>
+                    <option value="45" className="bg-slate-900 text-white">45s</option>
+                    <option value="60" className="bg-slate-900 text-white">60s</option>
                   </select>
                   <div className="absolute inset-0 rounded-xl pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_15px_rgba(34,197,94,0.1)] transition-all" />
                   <svg className="absolute right-4 top-5 w-5 h-5 text-gray-500 pointer-events-none group-hover:text-green-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,10 +186,10 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                   <select 
                     value={turnMode}
                     onChange={e => setTurnMode(e.target.value)}
-                    className="appearance-none w-full bg-black/20 border border-white/10 rounded-xl p-4 focus:outline-none focus:border-green-500 focus:bg-black/40 text-white font-mono text-lg transition-all cursor-pointer peer"
+                    className="w-full bg-slate-800/40 border border-slate-600/30 rounded-xl p-3 focus:outline-none focus:border-green-500 cursor-pointer text-white font-mono text-center text-xs tracking-widest uppercase appearance-none hover:bg-slate-800/60 transition-colors"
                   >
-                    <option value="simultaneous" className="bg-gray-900">Simultaneous</option>
-                    <option value="sequential" className="bg-gray-900">Sequential</option>
+                    <option value="simultaneous" className="bg-slate-900 text-white">Simultaneous (Fast)</option>
+                    <option value="sequential" className="bg-slate-900 text-white">Sequential (Turn by Turn)</option>
                   </select>
                   <div className="absolute inset-0 rounded-xl pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_15px_rgba(34,197,94,0.1)] transition-all" />
                   <svg className="absolute right-4 top-5 w-5 h-5 text-gray-500 pointer-events-none group-hover:text-green-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -200,7 +200,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
             </div>
 
             {/* Privacy Checkboxes */}
-            <div className="flex flex-col sm:flex-row gap-6 bg-white/[0.02] p-5 rounded-xl border border-white/5">
+            <div className="flex flex-col sm:flex-row gap-6 bg-slate-800/20 p-5 rounded-xl border border-white/5">
               <div className="flex flex-col gap-4 flex-1">
                 <label className="flex items-center gap-4 cursor-pointer group">
                   <input 
@@ -209,7 +209,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                     onChange={e => setIsPrivate(e.target.checked)}
                     className="sr-only"
                   />
-                  <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${isPrivate ? 'bg-green-500 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-black/50 border border-white/10 group-hover:border-green-500/50'}`}>
+                  <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${isPrivate ? 'bg-green-500 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-slate-800/60 border border-slate-600/50 group-hover:border-green-500/50'}`}>
                     {isPrivate && <svg className="w-4 h-4 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                   </div>
                   <span className="text-white font-bold tracking-wider group-hover:text-green-100 transition-colors">Private Room</span>
@@ -221,7 +221,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       placeholder="SET PASSWORD..."
-                      className="w-full bg-black/40 border border-white/10 rounded-lg p-3 focus:outline-none focus:border-green-500 text-white font-mono text-sm tracking-widest uppercase transition-all peer"
+                      className="w-full bg-slate-800/40 border border-slate-600/30 rounded-lg p-3 focus:outline-none focus:border-green-500 text-white font-mono text-sm tracking-widest uppercase transition-all peer"
                     />
                     <div className="absolute inset-0 rounded-lg pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_10px_rgba(34,197,94,0.1)] transition-all" />
                   </div>
@@ -236,7 +236,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                     onChange={e => setAllowSpectators(e.target.checked)}
                     className="sr-only"
                   />
-                  <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${allowSpectators ? 'bg-green-500 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-black/50 border border-white/10 group-hover:border-green-500/50'}`}>
+                  <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${allowSpectators ? 'bg-green-500 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-slate-800/60 border border-slate-600/50 group-hover:border-green-500/50'}`}>
                     {allowSpectators && <svg className="w-4 h-4 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                   </div>
                   <span className="text-white font-bold tracking-wider group-hover:text-green-100 transition-colors">Allow Spectators</span>
@@ -252,7 +252,10 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
                 {categories.map(cat => {
                   const isSelected = enabledCategories.includes(cat.name);
                   return (
-                    <label key={cat._id} className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all duration-300 ${isSelected ? 'bg-green-500/10 border-green-500/80 shadow-[inset_0_0_20px_rgba(34,197,94,0.1),0_0_15px_rgba(34,197,94,0.2)]' : 'bg-black/30 border-white/5 hover:border-white/20 hover:bg-white/5'}`} style={{ borderStyle: 'solid', borderWidth: '1px' }}>
+                    <label 
+                      key={cat.name} 
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-green-500/10 border-green-500/50 hover:bg-green-500/20' : 'bg-slate-800/30 border-slate-600/30 hover:border-slate-500 hover:bg-slate-800/50'}`}
+                    >
                       <input 
                         type="radio"
                         name="categorySelect"
@@ -272,7 +275,7 @@ export default function RoomSettingsModal({ isOpen, onClose, onSave, initialSett
           </form>
         </div>
 
-        <div className="p-6 border-t border-white/5 bg-black/40 flex justify-end gap-4 shrink-0">
+        <div className="p-6 border-t border-slate-700/50 bg-slate-900/60 flex justify-end gap-4 shrink-0">
           <button 
             type="button" 
             onClick={onClose}
