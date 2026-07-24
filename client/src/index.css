@@ -26,15 +26,11 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #111827;
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: none;
-  overflow-x: hidden;
+  background-color: #050505;
 }
 
 #root {
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
 @keyframes popIn {
