@@ -1,6 +1,18 @@
 const Room = require('../models/Room');
 const crypto = require('crypto');
 
+const COLORS = [
+  'MAGENTA', 'CRIMSON', 'INDIGO', 'COBALT', 'AZURE', 'CYAN', 
+  'EMERALD', 'JADE', 'VIOLET', 'ONYX', 'OBSIDIAN', 'AMBER', 
+  'RUBY', 'TOPAZ', 'SAPPHIRE', 'SCARLET', 'NEON', 'AQUA'
+];
+
+const LIZARDS = [
+  'GECKO', 'IGUANA', 'SKINK', 'MONITOR', 'DRAGON', 'AGAMA', 
+  'ANOLE', 'TEGU', 'CHAMELEON', 'THORNY', 'GILA', 'BASILISK', 
+  'CHUCKWALLA', 'UROMASTYX', 'SWIFT', 'VIPER'
+];
+
 class RoomService {
   async getAllRooms() {
     return Room.find({ status: { $in: ['lobby', 'in_progress', 'voting'] } })
@@ -21,7 +33,23 @@ class RoomService {
       throw new Error('You are already hosting an active room. Leave or wait for it to finish before creating another.');
     }
 
-    const code = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6 chars
+    let code;
+    let isUnique = false;
+    let attempts = 0;
+    while (!isUnique && attempts < 10) {
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      const lizard = LIZARDS[Math.floor(Math.random() * LIZARDS.length)];
+      code = `${color}-${lizard}`;
+      const existing = await Room.findOne({ code });
+      if (!existing) isUnique = true;
+      attempts++;
+    }
+
+    if (!isUnique) {
+      // Fallback if somehow collisions happen (very unlikely)
+      code = crypto.randomBytes(4).toString('hex').toUpperCase();
+    }
+
     const room = new Room({
       code,
       name: roomData.name || `${roomData.hostName}'s Room`,

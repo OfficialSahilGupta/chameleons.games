@@ -312,17 +312,17 @@ export default function Lobby() {
                 <div className="relative">
                   <input 
                     type="text" 
-                    placeholder="ENTER 6-DIGIT CODE" 
+                    placeholder="ENTER CODE (e.g. MAGENTA-GECKO)" 
                     value={joinCode}
                     onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                    maxLength={6}
-                    className="w-full p-4 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:border-green-500 focus:bg-black/60 text-center font-mono text-2xl tracking-[0.3em] text-white transition-colors uppercase placeholder:text-gray-700 placeholder:text-sm placeholder:tracking-widest"
+                    maxLength={25}
+                    className="w-full p-4 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:border-green-500 focus:bg-black/60 text-center font-mono text-lg tracking-[0.1em] sm:tracking-[0.2em] text-white transition-colors uppercase placeholder:text-gray-700 placeholder:text-xs placeholder:tracking-widest"
                   />
                   <div className="absolute inset-0 rounded-xl pointer-events-none border border-green-500/0 peer-focus:border-green-500/50 peer-focus:shadow-[inset_0_0_15px_rgba(34,197,94,0.1)] transition-all" />
                 </div>
                 <button 
                   type="submit"
-                  disabled={joinCode.length !== 6}
+                  disabled={joinCode.length < 5}
                   className="w-full border border-white/20 hover:border-white/50 hover:bg-white/5 disabled:opacity-50 disabled:hover:border-white/20 disabled:hover:bg-transparent font-bold tracking-widest py-3 px-4 rounded-xl transition-all text-sm uppercase"
                 >
                   Join Room
