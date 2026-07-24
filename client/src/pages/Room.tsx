@@ -269,7 +269,7 @@ export default function Room() {
           </div>
 
           {/* Right Sidebar */}
-          <div className="lg:col-span-1 flex flex-col gap-6">
+          <div className="lg:col-span-1 flex flex-col gap-6 h-[80vh] lg:h-[calc(100vh-8rem)]">
             
             {room.status === 'lobby' && (
               <div className="glass-panel rounded-2xl p-6 shrink-0">
@@ -320,7 +320,7 @@ export default function Room() {
               </div>
             )}
 
-            <div className="flex-1 min-h-[400px] glass-panel rounded-2xl overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-[300px] lg:min-h-0 glass-panel rounded-2xl overflow-hidden flex flex-col">
               <ChatPanel 
                 socket={socket} 
                 code={code as string} 

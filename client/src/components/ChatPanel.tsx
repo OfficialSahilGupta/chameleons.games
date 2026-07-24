@@ -78,20 +78,24 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
 
   // Function to render text with highlighted @mentions
   const renderTextWithMentions = (text: string) => {
-    const parts = text.split(/(@\w+)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('@')) {
-        const name = part.substring(1);
-        const isMe = name === currentUsername;
-        const isPlayer = players.includes(name);
+    const words = text.split(/(\s+)/); // split by whitespace but keep the spaces
+    return words.map((word, i) => {
+      if (word.startsWith('@') && word.length > 1) {
+        // Strip punctuation at the end for matching
+        const cleanName = word.substring(1).replace(/[.,!?]+$/, '').toLowerCase();
+        const punctuation = word.substring(1).match(/[.,!?]+$/)?.[0] || '';
+        const originalName = word.substring(1, word.length - punctuation.length);
+        
+        const isMe = currentUsername.toLowerCase() === cleanName;
+        const isPlayer = players.some(p => p.toLowerCase() === cleanName);
+        
         if (isMe) {
-          return <span key={i} className="text-yellow-400 font-bold bg-yellow-900/30 px-1 rounded">{part}</span>;
+          return <span key={i}><span className="text-yellow-400 font-bold bg-yellow-900/30 px-1 rounded">@{originalName}</span>{punctuation}</span>;
         } else if (isPlayer) {
-          return <span key={i} className="text-blue-400 font-bold bg-blue-900/30 px-1 rounded">{part}</span>;
+          return <span key={i}><span className="text-blue-400 font-bold bg-blue-900/30 px-1 rounded">@{originalName}</span>{punctuation}</span>;
         }
-        return <span key={i} className="text-gray-300 font-semibold">{part}</span>;
       }
-      return <span key={i}>{part}</span>;
+      return <span key={i}>{word}</span>;
     });
   };
 
