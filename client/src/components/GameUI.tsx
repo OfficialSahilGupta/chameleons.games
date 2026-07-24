@@ -150,7 +150,7 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   // Handle Game Over differently, as it's the end of the session
   if (gameState.phase === 'game_over') {
     return (
-      <div className="max-w-4xl mx-auto mt-8 bg-gray-800 rounded-xl p-12 border border-gray-700 shadow-2xl text-center flex flex-col gap-8">
+      <div className="w-full h-full glass-panel rounded-2xl p-6 md:p-12 border border-white/5 shadow-2xl text-center flex flex-col gap-8 overflow-y-auto no-scrollbar">
         <h2 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Game Over!</h2>
         
         <div className="bg-gray-900 rounded-2xl p-8 max-w-2xl mx-auto w-full shadow-inner border border-gray-700">
@@ -196,7 +196,7 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-4 md:mt-8 bg-gray-800 rounded-xl p-4 md:p-8 border border-gray-700 shadow-2xl">
+    <div className="w-full h-full glass-panel rounded-2xl p-6 md:p-8 border border-white/5 shadow-2xl overflow-y-auto no-scrollbar">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 pb-4 border-b border-gray-700 gap-4">
         <h2 className="text-2xl font-bold text-green-400">Round {gameState.currentRoundNumber}</h2>
         <div className="text-xl font-mono bg-gray-900 px-4 py-2 rounded text-blue-400">
