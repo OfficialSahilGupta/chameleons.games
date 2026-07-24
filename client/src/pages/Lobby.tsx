@@ -142,7 +142,7 @@ export default function Lobby() {
       {/* HEADER */}
       <header className="flex-none p-6 md:px-12 flex justify-between items-center z-20 border-b border-white/5 bg-black/20 backdrop-blur-md">
         <div className="flex items-center group cursor-pointer relative" onClick={() => navigate('/')}>
-          <div className="font-black text-2xl tracking-[0.2em] text-white">
+          <div className="font-black text-2xl tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
             CHAMELEON LOBBY
           </div>
         </div>
