@@ -1,91 +1,118 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
-
-interface ChatReaction {
-  emoji: string;
-  userIds: string[];
-}
 
 interface ChatMessage {
   _id: string;
-  userId?: string;
+  userId: string;
   username: string;
   text: string;
-  type: 'chat' | 'system';
-  createdAt: string;
+  timestamp: string;
+  type?: 'user' | 'system';
   replyTo?: {
     messageId: string;
     username: string;
     text: string;
   };
-  reactions?: ChatReaction[];
+  reactions?: {
+    emoji: string;
+    userIds: string[];
+  }[];
 }
 
 interface ChatPanelProps {
   socket: Socket | null;
   code: string;
   disabled?: boolean;
-  players?: string[];
+  players?: string[]; // Array of player usernames
   currentUsername?: string;
 }
 
-const COMMON_EMOJIS = ['👍', '😂', '❤️', '🔥', '👀'];
+const COMMON_EMOJIS = ['👍', '😂', '🔥', '👀', '💯'];
 
 export default function ChatPanel({ socket, code, disabled = false, players = [], currentUsername = '' }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  
+  // Mention search state
+  const [mentionSearch, setMentionSearch] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!socket) return;
 
-    socket.emit('chat:history', { code }, (res: any) => {
-      if (res.success && res.history) {
-        setMessages(res.history);
-      }
+    socket.on('chat:history', (history: ChatMessage[]) => {
+      setMessages(history);
+      scrollToBottom();
     });
 
-    const handleNewMessage = (msg: ChatMessage) => {
+    socket.on('chat:message', (msg: ChatMessage) => {
       setMessages(prev => [...prev, msg]);
+      scrollToBottom();
+    });
+
+    socket.on('chat:reactionUpdated', (updatedMsg: ChatMessage) => {
+      setMessages(prev => prev.map(m => m._id === updatedMsg._id ? updatedMsg : m));
+    });
+
+    return () => {
+      socket.off('chat:history');
+      socket.off('chat:message');
+      socket.off('chat:reactionUpdated');
     };
+  }, [socket]);
 
-    const handleReactionUpdated = ({ messageId, reactions }: { messageId: string, reactions: ChatReaction[] }) => {
-      setMessages(prev => prev.map(m => m._id === messageId ? { ...m, reactions } : m));
-    };
-
-    socket.on('chat:message', handleNewMessage);
-    socket.on('chat:reactionUpdated', handleReactionUpdated);
-
-    return () => { 
-      socket.off('chat:message', handleNewMessage); 
-      socket.off('chat:reactionUpdated', handleReactionUpdated);
-    };
-  }, [socket, code]);
-
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      setTimeout(() => {
+        scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
+      }, 50);
     }
-  }, [messages]);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputText(val);
+    
+    // Check for @mention trigger at current cursor position
+    const cursor = e.target.selectionStart || val.length;
+    const textBeforeCursor = val.slice(0, cursor);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+    
+    if (match) {
+      setMentionSearch(match[1].toLowerCase());
+    } else {
+      setMentionSearch(null);
+    }
+  };
+
+  const handleMentionSelect = (username: string) => {
+    if (!inputRef.current) return;
+    const cursor = inputRef.current.selectionStart || inputText.length;
+    const textBeforeCursor = inputText.slice(0, cursor);
+    const textAfterCursor = inputText.slice(cursor);
+    
+    const newTextBefore = textBeforeCursor.replace(/@([a-zA-Z0-9_]*)$/, `@${username} `);
+    
+    setInputText(newTextBefore + textAfterCursor);
+    setMentionSearch(null);
+    inputRef.current.focus();
+  };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !socket || disabled) return;
-    
+
     const payload: any = { code, text: inputText.trim() };
     if (replyTo) {
-      payload.replyTo = {
-        messageId: replyTo._id,
-        username: replyTo.username,
-        text: replyTo.text
-      };
+      payload.replyToId = replyTo._id;
     }
-    
+
     socket.emit('chat:send', payload);
     setInputText('');
     setReplyTo(null);
+    setMentionSearch(null);
   };
 
   const handleReplyClick = (msg: ChatMessage) => {
@@ -102,7 +129,6 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
   const renderTextWithMentions = (text: string) => {
     if (!players || players.length === 0) return <span>{text}</span>;
 
-    // Create a regex that exactly matches any player's name (case-insensitive) preceded by @
     const escapedPlayers = [...players]
       .sort((a, b) => b.length - a.length) // Match longer names first
       .map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -127,9 +153,14 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
   };
 
   const chatMessages = messages.filter(m => m.type !== 'system');
+  
+  // Filter for autocomplete
+  const mentionCandidates = mentionSearch !== null 
+    ? players.filter(p => p.toLowerCase().includes(mentionSearch)).slice(0, 5)
+    : [];
 
   return (
-    <div className="flex flex-col h-full bg-slate-900/60 rounded-2xl overflow-hidden backdrop-blur-xl border border-white/5">
+    <div className="flex flex-col h-full bg-slate-900/60 rounded-2xl overflow-hidden backdrop-blur-xl border border-white/5 relative">
       <div className="bg-slate-950/80 p-4 border-b border-white/10 shrink-0 flex items-center justify-between shadow-md z-20">
         <h3 className="font-black text-gray-300 text-sm tracking-widest uppercase flex items-center gap-2">
           <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
@@ -139,7 +170,7 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
       
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-5 space-y-8 no-scrollbar relative z-10"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-8 no-scrollbar relative z-10"
       >
         {chatMessages.length === 0 ? (
           <div className="text-gray-500 text-xs font-bold tracking-widest uppercase text-center mt-10 opacity-50">No comms established.</div>
@@ -153,7 +184,6 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
                     {msg.username}
                   </span>
                   
-                  {/* Action Menu (Reply) */}
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
                     <button 
                       onClick={() => handleReplyClick(msg)}
@@ -166,37 +196,41 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
 
                 <div className={`relative max-w-[85%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                   
-                  {/* Message Bubble Container */}
-                  <div className="relative group/bubble z-10">
+                  <div className="relative group/bubble flex items-center z-10">
                     
-                    {/* Floating Reaction Bar */}
-                    <div className={`absolute -top-10 opacity-0 group-hover/bubble:opacity-100 transition-all duration-200 flex items-center gap-2 bg-slate-900 border border-white/10 rounded-full px-4 py-2 shadow-2xl z-50 ${isMe ? 'right-0' : 'left-0'}`}>
-                      {COMMON_EMOJIS.map(emoji => (
-                        <button key={emoji} onClick={() => handleReact(msg._id, emoji)} className="hover:scale-150 transition-transform text-lg">{emoji}</button>
-                      ))}
-                    </div>
+                    {isMe && (
+                      <div className="absolute right-full mr-3 opacity-0 group-hover/bubble:opacity-100 transition-all duration-200 flex items-center gap-1.5 bg-slate-900 border border-white/10 rounded-full px-3 py-1.5 shadow-2xl z-50 whitespace-nowrap">
+                        {COMMON_EMOJIS.map(emoji => (
+                          <button key={emoji} onClick={() => handleReact(msg._id, emoji)} className="hover:scale-150 transition-transform text-base">{emoji}</button>
+                        ))}
+                      </div>
+                    )}
 
                     <div className={`px-5 py-3 text-[15px] rounded-2xl shadow-xl border backdrop-blur-md flex flex-col gap-2 ${
                       isMe 
                         ? 'bg-emerald-900/30 text-emerald-50 border-emerald-500/30 rounded-tr-sm shadow-[0_4px_20px_rgba(16,185,129,0.15)]' 
                         : 'bg-slate-800/80 text-gray-100 border-white/10 rounded-tl-sm shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
                     }`}>
-                      
-                      {/* Integrated Reply Block */}
                       {msg.replyTo && (
                         <div className={`rounded mb-1 p-2.5 text-xs border-l-2 border-emerald-500/50 ${isMe ? 'bg-black/20 text-emerald-100/70' : 'bg-black/30 text-gray-400'}`}>
                           <div className="font-black text-emerald-400 mb-0.5">@{msg.replyTo.username}</div>
                           <div className="truncate">{msg.replyTo.text}</div>
                         </div>
                       )}
-
                       <span className="break-words leading-relaxed font-medium">
                         {renderTextWithMentions(msg.text)}
                       </span>
                     </div>
+
+                    {!isMe && (
+                      <div className="absolute left-full ml-3 opacity-0 group-hover/bubble:opacity-100 transition-all duration-200 flex items-center gap-1.5 bg-slate-900 border border-white/10 rounded-full px-3 py-1.5 shadow-2xl z-50 whitespace-nowrap">
+                        {COMMON_EMOJIS.map(emoji => (
+                          <button key={emoji} onClick={() => handleReact(msg._id, emoji)} className="hover:scale-150 transition-transform text-base">{emoji}</button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Render Reactions */}
                   {msg.reactions && msg.reactions.length > 0 && (
                     <div className={`flex flex-wrap gap-1.5 mt-2 z-20 ${isMe ? 'justify-end' : 'justify-start'}`}>
                       {msg.reactions.map(r => (
@@ -211,7 +245,6 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
                       ))}
                     </div>
                   )}
-
                 </div>
               </div>
             );
@@ -219,7 +252,26 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
         )}
       </div>
 
-      <div className="bg-slate-950/80 border-t border-white/10 shrink-0 flex flex-col p-4 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] z-20">
+      <div className="bg-slate-950/80 border-t border-white/10 shrink-0 flex flex-col p-4 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] z-30 relative">
+        {mentionSearch !== null && mentionCandidates.length > 0 && (
+          <div className="absolute bottom-full left-0 w-full p-2">
+            <div className="bg-slate-800 border border-emerald-500/30 rounded-xl shadow-[0_-5px_30px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="px-3 py-2 text-[10px] font-black tracking-widest text-emerald-400 uppercase bg-slate-900/50">
+                Mention Player
+              </div>
+              {mentionCandidates.map(player => (
+                <button
+                  key={player}
+                  onClick={() => handleMentionSelect(player)}
+                  className="w-full text-left px-4 py-3 hover:bg-emerald-500/20 text-white font-bold transition-colors border-t border-white/5 flex items-center gap-2"
+                >
+                  <span className="text-emerald-400">@</span>{player}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {replyTo && (
           <div className="bg-slate-800/90 rounded-lg px-4 py-3 flex justify-between items-center text-xs border border-emerald-500/30 mb-3 shadow-lg">
             <span className="text-gray-300 truncate">
@@ -235,7 +287,7 @@ export default function ChatPanel({ socket, code, disabled = false, players = []
             ref={inputRef}
             type="text" 
             value={inputText}
-            onChange={e => setInputText(e.target.value)}
+            onChange={handleInputChange}
             placeholder={disabled ? "Comms offline..." : "Type message or @player..."}
             disabled={disabled}
             maxLength={200}
