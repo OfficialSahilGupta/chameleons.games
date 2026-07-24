@@ -272,52 +272,63 @@ export default function Room() {
                 </div>
 
                 {/* ROOM RULES & START GAME FOOTER */}
-                <div className="mt-8 pt-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 border-t border-white/5">
-                  <div className="flex flex-col gap-3">
-                    <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase flex items-center gap-4">
-                      Room Rules
-                      {isHost && (
-                        <button onClick={() => setIsSettingsModalOpen(true)} className="text-[10px] text-green-400 hover:text-green-300 font-bold tracking-widest uppercase transition-colors">EDIT</button>
-                      )}
-                    </h3>
-                    <div className="flex flex-wrap gap-4 text-xs tracking-wider">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 uppercase font-bold">Capacity:</span>
-                        <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.maxPlayers}</span>
+                <div className="mt-auto pt-8 border-t border-white/5">
+                  <div className="bg-slate-950/60 rounded-2xl p-5 md:p-6 border border-white/5 shadow-inner flex flex-col xl:flex-row justify-between items-center gap-8">
+                    
+                    {/* Stats Grid */}
+                    <div className="flex-1 w-full">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-[10px] text-gray-400 font-bold tracking-widest uppercase flex items-center gap-2">
+                          <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          Room Configuration
+                        </h3>
+                        {isHost && (
+                          <button onClick={() => setIsSettingsModalOpen(true)} className="text-[10px] text-green-400 hover:text-green-300 font-bold tracking-widest uppercase transition-colors bg-green-900/20 px-3 py-1 rounded-full border border-green-500/20 hover:border-green-500/50">EDIT SETTINGS</button>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 uppercase font-bold">Rounds:</span>
-                        <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.roundCount}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 uppercase font-bold">Timer:</span>
-                        <span className="font-mono text-green-400 bg-green-900/20 border border-green-500/20 px-2 py-1 rounded">{room.settings.timerSeconds}s</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 uppercase font-bold">Mode:</span>
-                        <span className="font-mono text-yellow-400 bg-yellow-900/20 border border-yellow-500/20 px-2 py-1 rounded capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {isHost && (
-                    <div className="flex flex-col w-full xl:w-auto shrink-0">
-                      <button 
-                        onClick={handleStartGame}
-                        disabled={!canStart}
-                        className="w-full xl:w-64 bg-green-500 hover:bg-green-400 disabled:bg-slate-800 disabled:text-gray-600 disabled:border-transparent text-black font-black py-4 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:shadow-none hover:shadow-[0_0_30px_rgba(74,222,128,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 flex items-center justify-center gap-2 border border-green-400"
-                      >
-                        START GAME
-                      </button>
-                      {!canStart && (
-                        <div className="text-center text-[10px] font-bold tracking-widest uppercase text-gray-500 mt-3">
-                          {room.players.length < room.settings.minPlayers 
-                            ? `Need ${room.settings.minPlayers - room.players.length} more players` 
-                            : 'Waiting for players to ready up'}
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="bg-slate-900/80 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                          <span className="text-[9px] text-gray-500 font-black tracking-widest uppercase">Capacity</span>
+                          <span className="text-white font-mono font-bold">{room.settings.maxPlayers} <span className="text-[10px] text-gray-500 font-sans tracking-widest uppercase">Max</span></span>
                         </div>
-                      )}
+                        <div className="bg-slate-900/80 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                          <span className="text-[9px] text-gray-500 font-black tracking-widest uppercase">Rounds</span>
+                          <span className="text-white font-mono font-bold">{room.settings.roundCount} <span className="text-[10px] text-gray-500 font-sans tracking-widest uppercase">Total</span></span>
+                        </div>
+                        <div className="bg-slate-900/80 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                          <span className="text-[9px] text-gray-500 font-black tracking-widest uppercase">Timer</span>
+                          <span className="text-emerald-400 font-mono font-bold">{room.settings.timerSeconds}s</span>
+                        </div>
+                        <div className="bg-slate-900/80 rounded-xl p-3 border border-white/5 flex flex-col gap-1">
+                          <span className="text-[9px] text-gray-500 font-black tracking-widest uppercase">Mode</span>
+                          <span className="text-yellow-400 font-mono font-bold capitalize truncate">{room.settings.turnMode || 'Simultaneous'}</span>
+                        </div>
+                      </div>
                     </div>
-                  )}
+                    
+                    {/* Action Block */}
+                    {isHost && (
+                      <div className="flex flex-col w-full xl:w-[280px] shrink-0 border-t xl:border-t-0 xl:border-l border-white/5 pt-6 xl:pt-0 xl:pl-8">
+                        <button 
+                          onClick={handleStartGame}
+                          disabled={!canStart}
+                          className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 disabled:from-slate-800 disabled:to-slate-800 disabled:text-gray-600 disabled:border-transparent text-black font-black py-4 px-6 rounded-xl transition-all shadow-[0_0_30px_rgba(34,197,94,0.3)] disabled:shadow-none hover:shadow-[0_0_40px_rgba(74,222,128,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 flex items-center justify-center gap-2 border border-green-400"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          START MATCH
+                        </button>
+                        {!canStart && (
+                          <div className="text-center text-[10px] font-bold tracking-widest uppercase text-yellow-500/80 mt-3 flex items-center justify-center gap-1.5">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            {room.players.length < room.settings.minPlayers 
+                              ? `Need ${room.settings.minPlayers - room.players.length} more players` 
+                              : 'Waiting for players to ready up'}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
               </div>
