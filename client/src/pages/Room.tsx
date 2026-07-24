@@ -270,61 +270,62 @@ export default function Room() {
                     );
                   })}
                 </div>
+
+                {/* ROOM RULES & START GAME FOOTER */}
+                <div className="mt-8 pt-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 border-t border-white/5">
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase flex items-center gap-4">
+                      Room Rules
+                      {isHost && (
+                        <button onClick={() => setIsSettingsModalOpen(true)} className="text-[10px] text-green-400 hover:text-green-300 font-bold tracking-widest uppercase transition-colors">EDIT</button>
+                      )}
+                    </h3>
+                    <div className="flex flex-wrap gap-4 text-xs tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 uppercase font-bold">Capacity:</span>
+                        <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.maxPlayers}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 uppercase font-bold">Rounds:</span>
+                        <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.roundCount}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 uppercase font-bold">Timer:</span>
+                        <span className="font-mono text-green-400 bg-green-900/20 border border-green-500/20 px-2 py-1 rounded">{room.settings.timerSeconds}s</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 uppercase font-bold">Mode:</span>
+                        <span className="font-mono text-yellow-400 bg-yellow-900/20 border border-yellow-500/20 px-2 py-1 rounded capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {isHost && (
+                    <div className="flex flex-col w-full xl:w-auto shrink-0">
+                      <button 
+                        onClick={handleStartGame}
+                        disabled={!canStart}
+                        className="w-full xl:w-64 bg-green-500 hover:bg-green-400 disabled:bg-slate-800 disabled:text-gray-600 disabled:border-transparent text-black font-black py-4 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:shadow-none hover:shadow-[0_0_30px_rgba(74,222,128,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 flex items-center justify-center gap-2 border border-green-400"
+                      >
+                        START GAME
+                      </button>
+                      {!canStart && (
+                        <div className="text-center text-[10px] font-bold tracking-widest uppercase text-gray-500 mt-3">
+                          {room.players.length < room.settings.minPlayers 
+                            ? `Need ${room.settings.minPlayers - room.players.length} more players` 
+                            : 'Waiting for players to ready up'}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
               </div>
             )}
           </div>
 
           {/* Right Sidebar */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            
-            {room.status === 'lobby' && (
-              <div className="glass-panel rounded-2xl p-6 shrink-0">
-                <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-                  <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Room Rules</h3>
-                  {isHost && (
-                    <button onClick={() => setIsSettingsModalOpen(true)} className="text-[10px] text-green-400 hover:text-green-300 font-bold tracking-widest uppercase transition-colors">EDIT</button>
-                  )}
-                </div>
-                
-                <div className="flex flex-col gap-3 text-xs tracking-wider">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 uppercase font-bold">Capacity</span>
-                    <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.maxPlayers}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 uppercase font-bold">Rounds</span>
-                    <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.roundCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 uppercase font-bold">Timer</span>
-                    <span className="font-mono text-green-400 bg-green-900/20 border border-green-500/20 px-2 py-1 rounded">{room.settings.timerSeconds}s</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 uppercase font-bold">Mode</span>
-                    <span className="font-mono text-yellow-400 bg-yellow-900/20 border border-yellow-500/20 px-2 py-1 rounded capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
-                  </div>
-                </div>
-
-                {isHost && (
-                  <div className="mt-6 pt-6 border-t border-white/5">
-                    <button 
-                      onClick={handleStartGame}
-                      disabled={!canStart}
-                      className="w-full bg-green-500 hover:bg-green-400 disabled:bg-slate-800 disabled:text-gray-600 disabled:border-transparent text-black font-black py-4 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:shadow-none hover:shadow-[0_0_30px_rgba(74,222,128,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 flex items-center justify-center gap-2 border border-green-400"
-                    >
-                      START GAME
-                    </button>
-                    {!canStart && (
-                      <div className="text-center text-[10px] font-bold tracking-widest uppercase text-gray-500 mt-3">
-                        {room.players.length < room.settings.minPlayers 
-                          ? `Need ${room.settings.minPlayers - room.players.length} more players` 
-                          : 'Waiting for players to ready up'}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
 
             <div className="w-full h-[600px] lg:h-[750px] glass-panel rounded-2xl overflow-hidden flex flex-col shadow-2xl">
               <ChatPanel 
