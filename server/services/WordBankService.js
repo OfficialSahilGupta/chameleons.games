@@ -1,4 +1,5 @@
 const Category = require('../models/Category');
+const redisClient = require('../redisClient');
 
 class WordBankService {
   async getRandomWord(categoryName) {
@@ -28,10 +29,38 @@ class WordBankService {
     return { boardWords: selected, secretWord };
   }
 
+  async invalidateCache() {
+    try {
+      if (redisClient.isReady) {
+        await redisClient.del('categories:active');
+      }
+    } catch (err) {
+      console.error('Redis cache invalidation error:', err);
+    }
+  }
 
   async getCategories(includeInactive = false) {
+    if (!includeInactive && redisClient.isReady) {
+      try {
+        const cached = await redisClient.get('categories:active');
+        if (cached) return JSON.parse(cached);
+      } catch (err) {
+        console.error('Redis GET Error:', err);
+      }
+    }
+
     const query = includeInactive ? {} : { isActive: true };
-    return Category.find(query);
+    const categories = await Category.find(query);
+
+    if (!includeInactive && redisClient.isReady) {
+      try {
+        await redisClient.setEx('categories:active', 86400, JSON.stringify(categories));
+      } catch (err) {
+        console.error('Redis SET Error:', err);
+      }
+    }
+
+    return categories;
   }
 
   async getCategoryById(id) {
@@ -40,15 +69,21 @@ class WordBankService {
 
   async createCategory(name) {
     const category = new Category({ name });
-    return category.save();
+    const saved = await category.save();
+    await this.invalidateCache();
+    return saved;
   }
 
   async updateCategory(id, updateData) {
-    return Category.findByIdAndUpdate(id, updateData, { new: true });
+    const updated = await Category.findByIdAndUpdate(id, updateData, { new: true });
+    await this.invalidateCache();
+    return updated;
   }
 
   async deleteCategory(id) {
-    return Category.findByIdAndDelete(id);
+    const deleted = await Category.findByIdAndDelete(id);
+    await this.invalidateCache();
+    return deleted;
   }
 
   async addWordsToCategory(categoryId, wordsList, userId) {
@@ -63,7 +98,9 @@ class WordBankService {
     }));
 
     category.words.push(...newWords);
-    return category.save();
+    const saved = await category.save();
+    await this.invalidateCache();
+    return saved;
   }
 
   async updateWordStatus(categoryId, wordId, isActive) {
@@ -74,7 +111,9 @@ class WordBankService {
     if (!word) throw new Error('Word not found');
 
     word.isActive = isActive;
-    return category.save();
+    const saved = await category.save();
+    await this.invalidateCache();
+    return saved;
   }
 
   async deleteWord(categoryId, wordId) {
@@ -82,7 +121,9 @@ class WordBankService {
     if (!category) throw new Error('Category not found');
 
     category.words.pull(wordId);
-    return category.save();
+    const saved = await category.save();
+    await this.invalidateCache();
+    return saved;
   }
 }
 

@@ -39,6 +39,17 @@ const io = new Server(server, {
   },
 });
 
+// Setup Redis adapter for Socket.io
+const { createAdapter } = require('@socket.io/redis-adapter');
+const redisClient = require('./redisClient');
+const pubClient = redisClient.duplicate();
+const subClient = redisClient.duplicate();
+
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+  io.adapter(createAdapter(pubClient, subClient));
+  console.log('Redis adapter attached to Socket.io');
+}).catch(err => console.error('Redis Adapter Error:', err));
+
 const roomService = require('./services/RoomService');
 const gameEngine = require('./services/GameEngine');
 const chatService = require('./services/ChatService');

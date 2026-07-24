@@ -9,10 +9,13 @@ router.get('/', async (req, res) => {
     const categories = await wordBankService.getCategories(false); // Only active
     
     // Filter out inactive words before sending
-    const filteredCategories = categories.map(cat => ({
-      ...cat.toObject(),
-      words: cat.words.filter(w => w.isActive)
-    }));
+    const filteredCategories = categories.map(cat => {
+      const catObj = cat.toObject ? cat.toObject() : cat;
+      return {
+        ...catObj,
+        words: catObj.words.filter(w => w.isActive)
+      };
+    });
 
     res.json(filteredCategories);
   } catch (err) {
