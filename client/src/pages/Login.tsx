@@ -97,12 +97,25 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row relative overflow-hidden font-sans">
       
+      <style>{`
+        @keyframes camouflage {
+          0% { filter: hue-rotate(0deg) brightness(1); }
+          25% { filter: hue-rotate(90deg) brightness(1.2); }
+          50% { filter: hue-rotate(180deg) brightness(0.9); }
+          75% { filter: hue-rotate(270deg) brightness(1.1); }
+          100% { filter: hue-rotate(360deg) brightness(1); }
+        }
+        .animate-camouflage {
+          animation: camouflage 20s infinite linear;
+        }
+      `}</style>
+      
       {/* Background Ambient Effects & Chameleon Art */}
-      <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-pulse pointer-events-none"></div>
+      <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-green-900/20 rounded-full blur-[150px] mix-blend-screen animate-[pulse_10s_ease-in-out_infinite] animate-camouflage pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[30%] w-[60vw] h-[60vw] bg-red-900/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
       
       {/* Massive subtle chameleon graphic hanging in the background */}
-      <svg className="absolute w-[800px] h-[800px] text-green-500/5 -left-32 top-10 -z-10 rotate-[-10deg] pointer-events-none drop-shadow-[0_0_50px_rgba(34,197,94,0.1)]" viewBox="-30 -10 140 140" fill="currentColor">
+      <svg className="absolute w-[800px] h-[800px] text-green-500/5 -left-32 top-10 -z-10 rotate-[-10deg] pointer-events-none drop-shadow-[0_0_50px_rgba(34,197,94,0.1)] animate-camouflage" viewBox="-30 -10 140 140" fill="currentColor">
         {/* Curled Tail */}
         <path d="M 30,70 A 25,25 0 1,0 80,70 A 20,20 0 1,1 40,70 A 15,15 0 1,0 70,70 A 10,10 0 1,1 50,70" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
         {/* Main Body */}
