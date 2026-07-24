@@ -231,14 +231,14 @@ export default function Login() {
       {/* ═══════════════════════════ LEFT HERO ═══════════════════════════ */}
       <div className="flex-1 flex flex-col justify-center px-6 md:px-12 lg:px-20 pt-20 md:pt-0 z-10 min-h-0">
         <div className="max-w-2xl">
-          <div className="inline-block px-3 py-1.5 mb-6 border border-green-500/30 bg-green-500/10 text-green-400 rounded-full text-[10px] md:text-xs font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(34,197,94,0.15)]">
+          <div className="inline-block px-4 py-2 mb-6 border border-green-500/30 bg-green-500/10 text-green-400 rounded-full text-xs md:text-sm font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(34,197,94,0.15)]">
             A Psychological Game of Deception
           </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.05] tracking-tighter">
+          <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-[1.05] tracking-tighter">
             TRUST <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-500 via-gray-300 to-white">NO ONE.</span>
           </h1>
-          <p className="text-base md:text-lg text-gray-400 mb-8 leading-relaxed max-w-xl font-light">
+          <p className="text-lg md:text-xl text-gray-400 mb-8 leading-relaxed max-w-xl font-light">
             A secret word is shared among everyone—except the <strong className="text-green-500 font-bold">Chameleon</strong>.{' '}
             Blend in, manipulate the truth, or hunt down the liar before they steal the game. Are you a villager, or are you hiding in plain sight?
           </p>
