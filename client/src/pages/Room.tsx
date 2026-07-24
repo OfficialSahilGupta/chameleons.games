@@ -126,42 +126,62 @@ export default function Room() {
   const canStart = room.players.length >= room.settings.minPlayers && allReady;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-xl border border-gray-700">
-          <div>
-            <h1 className="text-3xl font-bold text-green-400">{room.name}</h1>
-            <p className="text-gray-400 text-sm mt-1">Room Code: <span className="font-mono bg-gray-700 px-2 py-1 rounded text-white tracking-wider">{room.code}</span></p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold uppercase ${room.status === 'lobby' ? 'bg-blue-900 text-blue-300' : 'bg-yellow-900 text-yellow-300'}`}>
-              {room.status.replace('_', ' ')}
-            </span>
-            <button onClick={handleLeaveRoom} className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded">Leave</button>
-          </div>
-        </header>
+    <div className="h-[100dvh] bg-gradient-to-br from-slate-900 to-slate-950 text-white relative overflow-hidden font-sans flex flex-col">
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-panel {
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.05);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(0,0,0,0.5);
+        }
+      `}</style>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+      {/* HEADER */}
+      <header className="flex-none p-6 md:px-12 flex justify-between items-center z-20 border-b border-white/5 bg-black/20 backdrop-blur-md">
+        <div className="flex flex-col">
+          <div className="font-black text-2xl tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 uppercase">
+            {room.name}
+          </div>
+          <div className="text-xs text-gray-500 font-bold tracking-widest mt-1">
+            CODE: <span className="text-green-400 font-mono bg-green-900/20 px-2 py-0.5 rounded border border-green-500/20 ml-2">{room.code}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className={`hidden sm:inline-block text-[10px] px-3 py-1.5 rounded-full font-bold tracking-widest uppercase ${room.status === 'lobby' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
+            {room.status === 'lobby' ? 'WAITING IN LOBBY' : 'IN GAME'}
+          </span>
+          <button onClick={handleLeaveRoom} className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-red-400 transition-colors ml-4">
+            Leave
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN LAYOUT */}
+      <div className="flex-1 overflow-y-auto no-scrollbar p-6 md:p-8 z-10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Main Content Area */}
-          <div className="md:col-span-3">
+          <div className="lg:col-span-3 flex flex-col">
             {room.status !== 'lobby' ? (
               <GameUI socket={socket} code={code as string} user={user} room={room} />
             ) : (
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
-                <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
-                  <h2 className="text-2xl font-bold">Players <span className="text-gray-400 text-lg font-normal">({room.players.length}/{room.settings.maxPlayers})</span></h2>
+              <div className="glass-panel rounded-2xl p-6 md:p-8 flex flex-col flex-1 min-h-[60vh]">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-white/5 pb-6 gap-4">
+                  <h2 className="text-2xl font-bold tracking-wider">PLAYERS <span className="text-green-500 text-lg ml-2">({room.players.length}/{room.settings.maxPlayers})</span></h2>
                   {!isHost && room.status === 'lobby' && (
                     <button 
                       onClick={handleToggleReady}
-                      className={`px-6 py-2 rounded font-bold transition ${isReady ? 'bg-yellow-500 hover:bg-yellow-400 text-gray-900' : 'bg-green-600 hover:bg-green-500 text-white'}`}
+                      className={`px-8 py-3 rounded-xl font-black text-xs tracking-widest uppercase transition-all hover:scale-105 ${isReady ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.2)]' : 'bg-green-500/20 text-green-400 border border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]'}`}
                     >
-                      {isReady ? 'Unready' : 'Ready Up'}
+                      {isReady ? 'UNREADY' : 'READY UP'}
                     </button>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {room.players.map((p: any) => {
                     const isPlayerHost = String(p.userId._id || p.userId) === String(room.hostId._id || room.hostId);
                     const isSelected = String(selectedPlayerId) === String(p.userId._id || p.userId);
@@ -170,78 +190,52 @@ export default function Room() {
                     return (
                       <div 
                         key={playerUserIdStr} 
-                        className={`relative flex items-center gap-4 p-3 rounded-lg border transition cursor-pointer ${
-                          isSelected ? 'bg-gray-600 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-gray-700 border-gray-600 hover:border-gray-500'
+                        className={`relative flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer group ${
+                          isSelected ? 'bg-slate-800/80 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/30 border-slate-700/50 hover:border-green-500/50 hover:bg-slate-800/50'
                         }`}
-                        onClick={() => {
-                          console.log('Player clicked:', p.userId.username, 'isHost:', isHost, 'isPlayerHost:', isPlayerHost);
-                          setSelectedPlayerId(isSelected ? null : playerUserIdStr);
-                        }}
+                        onClick={() => setSelectedPlayerId(isSelected ? null : playerUserIdStr)}
                       >
-                        <img 
-                          src={p.userId.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.userId.username}`} 
-                          alt="avatar" 
-                          className="w-12 h-12 rounded-full bg-gray-800"
-                        />
-                        <div className="flex-1">
+                        <div className="relative">
+                          <img 
+                            src={p.userId.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.userId.username}`} 
+                            alt="avatar" 
+                            className="w-12 h-12 rounded-full bg-black/40 border border-white/10"
+                          />
+                          {isPlayerHost && (
+                            <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1 shadow-[0_0_10px_rgba(234,179,8,0.5)]">
+                              <svg className="w-3 h-3 text-black" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.4-6.3-4.8-6.3 4.8 2.3-7.4-6-4.6h7.6z"/></svg>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-lg">{p.userId.username}</span>
-                            {isPlayerHost && (
-                              <span title="Host">
-                                {/* Crown SVG */}
-                                <svg width="18" height="18" viewBox="0 0 32 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_0_4px_rgba(250,204,21,0.6)]">
-                                  {/* Crown body */}
-                                  <path d="M2 22 L6 8 L12 16 L16 4 L20 16 L26 8 L30 22 Z" fill="#facc15" stroke="#fde68a" strokeWidth="1.2" strokeLinejoin="round"/>
-                                  {/* Base band */}
-                                  <rect x="2" y="20" width="28" height="4" rx="1.5" fill="#f59e0b"/>
-                                  {/* Jewels */}
-                                  <circle cx="16" cy="21.5" r="2" fill="#f87171"/>
-                                  <circle cx="8" cy="21.5" r="1.5" fill="#34d399"/>
-                                  <circle cx="24" cy="21.5" r="1.5" fill="#60a5fa"/>
-                                  {/* Crown tip dots */}
-                                  <circle cx="6" cy="8" r="1.8" fill="#fde68a"/>
-                                  <circle cx="16" cy="4" r="2" fill="#fde68a"/>
-                                  <circle cx="26" cy="8" r="1.8" fill="#fde68a"/>
-                                </svg>
-                              </span>
-                            )}
-                            {playerUserIdStr === String(currentUserId) && <span className="text-xs text-gray-400">(You)</span>}
+                            <span className="font-bold text-white truncate">{p.userId.username}</span>
+                            {playerUserIdStr === String(currentUserId) && <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">(You)</span>}
                           </div>
                           
-                          {/* Default view */}
                           {!isSelected && (
-                            <div className="text-sm">
+                            <div className="text-xs mt-1 font-bold tracking-widest uppercase">
                               {isPlayerHost ? (
-                                <span className="text-blue-400">Host</span>
+                                <span className="text-yellow-400">Host</span>
                               ) : (
-                                <span className={p.isReady ? 'text-green-400 font-semibold' : 'text-gray-400'}>
-                                  {p.isReady ? 'Ready' : 'Not Ready'}
+                                <span className={p.isReady ? 'text-green-400' : 'text-gray-500'}>
+                                  {p.isReady ? 'Ready' : 'Waiting'}
                                 </span>
                               )}
                             </div>
                           )}
 
-                          {/* Action Menu (Visible when clicked) */}
                           {isSelected && (
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-2">
                               {isHost && !isPlayerHost && room.status === 'lobby' ? (
                                 <>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); handleKickPlayer(playerUserIdStr); }}
-                                    className="text-xs bg-red-900/80 hover:bg-red-600 text-red-100 px-3 py-1.5 rounded font-semibold transition"
-                                  >
-                                    Kick Player
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); handleTransferHost(playerUserIdStr); }}
-                                    className="text-xs bg-blue-900/80 hover:bg-blue-600 text-blue-100 px-3 py-1.5 rounded font-semibold transition"
-                                  >
-                                    Make Host
-                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleKickPlayer(playerUserIdStr); }} className="text-[10px] bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 px-2 py-1 rounded transition-colors uppercase font-bold tracking-widest">Kick</button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleTransferHost(playerUserIdStr); }} className="text-[10px] bg-yellow-500/20 hover:bg-yellow-500 text-yellow-400 hover:text-white border border-yellow-500/30 px-2 py-1 rounded transition-colors uppercase font-bold tracking-widest">Make Host</button>
                                 </>
                               ) : (
-                                <span className="text-xs text-gray-400">
-                                  {isPlayerHost ? 'This player is the host.' : 'You do not have permission to manage this player.'}
+                                <span className="text-[9px] text-gray-500 tracking-widest uppercase">
+                                  {isPlayerHost ? 'Room Admin' : 'No Actions Available'}
                                 </span>
                               )}
                             </div>
@@ -251,105 +245,69 @@ export default function Room() {
                     );
                   })}
                 </div>
-                
-                {/* Empty Slots */}              </div>
+              </div>
             )}
           </div>
 
-          {/* Right Sidebar: Settings & Chat */}
-          <div className="md:col-span-1 flex flex-col gap-6 h-[80vh]">
+          {/* Right Sidebar */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
             
             {room.status === 'lobby' && (
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl flex flex-col shrink-0">
-                <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
-                  <h2 className="text-xl font-bold">Room Rules</h2>
+              <div className="glass-panel rounded-2xl p-6 shrink-0">
+                <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+                  <h3 className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Room Rules</h3>
                   {isHost && (
-                    <button 
-                      onClick={() => setIsSettingsModalOpen(true)}
-                      className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition"
-                    >
-                      Edit
-                    </button>
+                    <button onClick={() => setIsSettingsModalOpen(true)} className="text-[10px] text-green-400 hover:text-green-300 font-bold tracking-widest uppercase transition-colors">EDIT</button>
                   )}
                 </div>
                 
-                <div className="flex flex-col gap-4 text-sm">
-                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                    <span className="text-gray-400">Max Players</span>
-                    <span className="font-semibold">{room.settings.maxPlayers}</span>
+                <div className="flex flex-col gap-3 text-xs tracking-wider">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 uppercase font-bold">Capacity</span>
+                    <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.maxPlayers}</span>
                   </div>
-                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                    <span className="text-gray-400">Rounds</span>
-                    <span className="font-semibold">{room.settings.roundCount}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 uppercase font-bold">Rounds</span>
+                    <span className="font-mono text-white bg-slate-800 px-2 py-1 rounded">{room.settings.roundCount}</span>
                   </div>
-                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                    <span className="text-gray-400">Turn Timer</span>
-                    <span className="font-semibold">{room.settings.timerSeconds}s</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 uppercase font-bold">Timer</span>
+                    <span className="font-mono text-green-400 bg-green-900/20 border border-green-500/20 px-2 py-1 rounded">{room.settings.timerSeconds}s</span>
                   </div>
-                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                    <span className="text-gray-400">Turn Mode</span>
-                    <span className="font-semibold capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                    <span className="text-gray-400">Privacy</span>
-                    <span className="font-semibold flex items-center gap-1.5">
-                      {room.settings.isPrivate ? (
-                        <>
-                          {/* Padlock SVG */}
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="4" y="11" width="16" height="12" rx="3" fill="#6b7280" stroke="#9ca3af" strokeWidth="1.5"/>
-                            <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
-                            <circle cx="12" cy="17" r="1.8" fill="#d1d5db"/>
-                            <line x1="12" y1="18.8" x2="12" y2="21" stroke="#d1d5db" strokeWidth="1.8" strokeLinecap="round"/>
-                          </svg>
-                          Private
-                        </>
-                      ) : (
-                        <>
-                          {/* Globe SVG */}
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="10" stroke="#60a5fa" strokeWidth="1.5" fill="#1e3a5f"/>
-                            <ellipse cx="12" cy="12" rx="4.5" ry="10" stroke="#60a5fa" strokeWidth="1" fill="none"/>
-                            <line x1="2" y1="12" x2="22" y2="12" stroke="#60a5fa" strokeWidth="1" />
-                            <path d="M4 7 Q12 9 20 7" stroke="#60a5fa" strokeWidth="1" fill="none"/>
-                            <path d="M4 17 Q12 15 20 17" stroke="#60a5fa" strokeWidth="1" fill="none"/>
-                          </svg>
-                          Public
-                        </>
-                      )}
-                    </span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 uppercase font-bold">Mode</span>
+                    <span className="font-mono text-yellow-400 bg-yellow-900/20 border border-yellow-500/20 px-2 py-1 rounded capitalize">{room.settings.turnMode || 'Simultaneous'}</span>
                   </div>
                 </div>
 
                 {isHost && (
-                  <div className="mt-6 pt-4 border-t border-gray-700">
+                  <div className="mt-6 pt-6 border-t border-white/5">
                     <button 
                       onClick={handleStartGame}
                       disabled={!canStart}
-                      className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 font-bold py-3 rounded text-lg shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none transition-all"
+                      className="w-full bg-green-500 hover:bg-green-400 disabled:bg-slate-800 disabled:text-gray-600 disabled:border-transparent text-black font-black py-4 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:shadow-none hover:shadow-[0_0_30px_rgba(74,222,128,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 flex items-center justify-center gap-2 border border-green-400"
                     >
-                      Start Game
+                      START GAME
                     </button>
                     {!canStart && (
-                      <p className="text-center text-xs text-gray-400 mt-2">
+                      <div className="text-center text-[10px] font-bold tracking-widest uppercase text-gray-500 mt-3">
                         {room.players.length < room.settings.minPlayers 
-                          ? `Need ${room.settings.minPlayers - room.players.length} more` 
-                          : 'Waiting for Ready'}
-                      </p>
+                          ? `Need ${room.settings.minPlayers - room.players.length} more players` 
+                          : 'Waiting for players to ready up'}
+                      </div>
                     )}
                   </div>
                 )}
               </div>
             )}
 
-            <div className="flex-1 min-h-[400px]">
+            <div className="flex-1 min-h-[400px] glass-panel rounded-2xl overflow-hidden flex flex-col">
               <ChatPanel 
                 socket={socket} 
                 code={code as string} 
                 disabled={gamePhase === 'clue_writing'} 
               />
             </div>
-            
           </div>
         </div>
       </div>
