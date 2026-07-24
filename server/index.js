@@ -45,10 +45,13 @@ const redisClient = require('./redisClient');
 const pubClient = redisClient.duplicate();
 const subClient = redisClient.duplicate();
 
+pubClient.on('error', (err) => console.error('Redis PubClient Error:', err.message));
+subClient.on('error', (err) => console.error('Redis SubClient Error:', err.message));
+
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
   io.adapter(createAdapter(pubClient, subClient));
   console.log('Redis adapter attached to Socket.io');
-}).catch(err => console.error('Redis Adapter Error:', err));
+}).catch(err => console.error('Redis Adapter Error:', err.message));
 
 const roomService = require('./services/RoomService');
 const gameEngine = require('./services/GameEngine');
