@@ -37,8 +37,8 @@ class RoomService {
     let isUnique = false;
     let attempts = 0;
     while (!isUnique && attempts < 10) {
-      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-      const lizard = LIZARDS[Math.floor(Math.random() * LIZARDS.length)];
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)].toLowerCase();
+      const lizard = LIZARDS[Math.floor(Math.random() * LIZARDS.length)].toLowerCase();
       code = `${color}-${lizard}`;
       const existing = await Room.findOne({ code });
       if (!existing) isUnique = true;
@@ -47,7 +47,7 @@ class RoomService {
 
     if (!isUnique) {
       // Fallback if somehow collisions happen (very unlikely)
-      code = crypto.randomBytes(4).toString('hex').toUpperCase();
+      code = crypto.randomBytes(4).toString('hex').toLowerCase();
     }
 
     const room = new Room({
