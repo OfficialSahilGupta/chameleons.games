@@ -107,7 +107,7 @@ export default function Lobby() {
   });
 
   return (
-    <div className="h-[100dvh] bg-[#050505] text-white relative overflow-hidden font-sans flex flex-col">
+    <div className="h-[100dvh] bg-gradient-to-br from-slate-900 to-slate-950 text-white relative overflow-hidden font-sans flex flex-col">
       <style>{`
         @keyframes camouflage {
           0%   { filter: hue-rotate(0deg)   brightness(1);   }
