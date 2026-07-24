@@ -166,46 +166,7 @@ export default function Lobby() {
       {/* MAIN CONTENT AREA (Scrollable internally) */}
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar z-10 px-4 md:px-12 py-8">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 items-start">
-            <div className="flex items-center gap-2 bg-gray-800 py-2 px-4 rounded-full border border-gray-700">
-              <div className="relative group cursor-pointer" onClick={randomizeAvatar} title="Click to randomize avatar">
-                <img 
-                  src={user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`} 
-                  alt="avatar" 
-                  className="w-8 h-8 rounded-full bg-gray-700 transition group-hover:opacity-50"
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  {/* Die SVG */}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="2" width="20" height="20" rx="4" fill="#4f46e5" stroke="#818cf8" strokeWidth="1.2"/>
-                    {/* dots: 1-6 face */}
-                    <circle cx="7.5" cy="7.5" r="1.5" fill="white"/>
-                    <circle cx="16.5" cy="7.5" r="1.5" fill="white"/>
-                    <circle cx="12" cy="12" r="1.5" fill="white"/>
-                    <circle cx="7.5" cy="16.5" r="1.5" fill="white"/>
-                    <circle cx="16.5" cy="16.5" r="1.5" fill="white"/>
-                  </svg>
-                </div>
-              </div>
-              <span className="font-semibold text-gray-200">{user?.username}</span>
-            </div>
-            {user?.isAdmin && (
-              <button 
-                onClick={() => navigate('/admin')}
-                className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded transition"
-              >
-                Admin Panel
-              </button>
-            )}
-            <button 
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition"
-            >
-              Logout
-            </button>
-          </div>
-        </header>
 
-          {/* LEFT: ROOMS LIST */}
           <div className="flex-1 w-full flex flex-col gap-6">
             
             {errorMsg && (
