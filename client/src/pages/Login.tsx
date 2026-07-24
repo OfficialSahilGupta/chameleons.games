@@ -134,7 +134,7 @@ export default function Login() {
       
       {/* Top Header */}
       <div className="absolute top-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
-        <div className="font-bold text-xl tracking-widest text-white/50">CHAMELEON</div>
+        <div className="font-black text-2xl tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 animate-camouflage drop-shadow-[0_0_10px_rgba(52,211,153,0.4)]">CHAMELEONS</div>
         <div className="flex gap-4 pointer-events-auto">
           <button 
             onClick={() => { setMode('login'); setUsername(''); setPassword(''); }}
@@ -247,7 +247,10 @@ export default function Login() {
 
           {mode === 'register' && (
             <>
-              <h2 className="text-3xl font-bold mb-2 text-white">Register <span className="text-green-400">– without email!</span></h2>
+              <h2 className="text-3xl font-bold mb-2 text-white flex flex-col">
+                Register 
+                <span className="text-green-400 text-xl mt-1 font-medium">– without email!</span>
+              </h2>
               <div className="text-gray-400 mb-6 text-sm bg-white/5 p-4 rounded-lg border border-white/10">
                 <p className="mb-2 font-bold text-gray-300">Creating an account allows you to:</p>
                 <ul className="list-disc pl-5 space-y-1">
