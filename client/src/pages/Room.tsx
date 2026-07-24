@@ -186,7 +186,25 @@ export default function Room() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-lg">{p.userId.username}</span>
-                            {isPlayerHost && <span title="Host" className="text-yellow-400">👑</span>}
+                            {isPlayerHost && (
+                              <span title="Host">
+                                {/* Crown SVG */}
+                                <svg width="18" height="18" viewBox="0 0 32 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_0_4px_rgba(250,204,21,0.6)]">
+                                  {/* Crown body */}
+                                  <path d="M2 22 L6 8 L12 16 L16 4 L20 16 L26 8 L30 22 Z" fill="#facc15" stroke="#fde68a" strokeWidth="1.2" strokeLinejoin="round"/>
+                                  {/* Base band */}
+                                  <rect x="2" y="20" width="28" height="4" rx="1.5" fill="#f59e0b"/>
+                                  {/* Jewels */}
+                                  <circle cx="16" cy="21.5" r="2" fill="#f87171"/>
+                                  <circle cx="8" cy="21.5" r="1.5" fill="#34d399"/>
+                                  <circle cx="24" cy="21.5" r="1.5" fill="#60a5fa"/>
+                                  {/* Crown tip dots */}
+                                  <circle cx="6" cy="8" r="1.8" fill="#fde68a"/>
+                                  <circle cx="16" cy="4" r="2" fill="#fde68a"/>
+                                  <circle cx="26" cy="8" r="1.8" fill="#fde68a"/>
+                                </svg>
+                              </span>
+                            )}
                             {playerUserIdStr === String(currentUserId) && <span className="text-xs text-gray-400">(You)</span>}
                           </div>
                           
@@ -274,7 +292,32 @@ export default function Room() {
                   </div>
                   <div className="flex justify-between border-b border-gray-700/50 pb-2">
                     <span className="text-gray-400">Privacy</span>
-                    <span className="font-semibold">{room.settings.isPrivate ? 'Private 🔒' : 'Public 🌍'}</span>
+                    <span className="font-semibold flex items-center gap-1.5">
+                      {room.settings.isPrivate ? (
+                        <>
+                          {/* Padlock SVG */}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="4" y="11" width="16" height="12" rx="3" fill="#6b7280" stroke="#9ca3af" strokeWidth="1.5"/>
+                            <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+                            <circle cx="12" cy="17" r="1.8" fill="#d1d5db"/>
+                            <line x1="12" y1="18.8" x2="12" y2="21" stroke="#d1d5db" strokeWidth="1.8" strokeLinecap="round"/>
+                          </svg>
+                          Private
+                        </>
+                      ) : (
+                        <>
+                          {/* Globe SVG */}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="#60a5fa" strokeWidth="1.5" fill="#1e3a5f"/>
+                            <ellipse cx="12" cy="12" rx="4.5" ry="10" stroke="#60a5fa" strokeWidth="1" fill="none"/>
+                            <line x1="2" y1="12" x2="22" y2="12" stroke="#60a5fa" strokeWidth="1" />
+                            <path d="M4 7 Q12 9 20 7" stroke="#60a5fa" strokeWidth="1" fill="none"/>
+                            <path d="M4 17 Q12 15 20 17" stroke="#60a5fa" strokeWidth="1" fill="none"/>
+                          </svg>
+                          Public
+                        </>
+                      )}
+                    </span>
                   </div>
                 </div>
 

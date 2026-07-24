@@ -106,38 +106,9 @@ export default function Lobby() {
   });
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-8 relative overflow-hidden font-sans">
-      
-      <style>{`
-        @keyframes camouflage {
-          0% { filter: hue-rotate(0deg) brightness(1); }
-          25% { filter: hue-rotate(90deg) brightness(1.2); }
-          50% { filter: hue-rotate(180deg) brightness(0.9); }
-          75% { filter: hue-rotate(270deg) brightness(1.1); }
-          100% { filter: hue-rotate(360deg) brightness(1); }
-        }
-        .animate-camouflage {
-          animation: camouflage 20s infinite linear;
-        }
-      `}</style>
-      
-      {/* Background Ambient Effects & Chameleon Art */}
-      <div className="fixed top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-[pulse_10s_ease-in-out_infinite] animate-camouflage pointer-events-none"></div>
-      <div className="fixed bottom-[-20%] right-[30%] w-[60vw] h-[60vw] bg-red-900/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
-      
-      {/* Massive subtle chameleon graphic hanging in the background */}
-      <svg className="fixed w-[800px] h-[800px] text-green-500/5 -left-32 top-10 -z-10 rotate-[-10deg] pointer-events-none drop-shadow-[0_0_50px_rgba(34,197,94,0.1)] animate-camouflage" viewBox="-30 -10 140 140" fill="currentColor">
-        <path d="M 30,70 A 25,25 0 1,0 80,70 A 20,20 0 1,1 40,70 A 15,15 0 1,0 70,70 A 10,10 0 1,1 50,70" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-        <path d="M 30,70 C 10,80 0,60 10,40 C 20,10 50,15 50,45 C 50,60 40,70 30,70 Z" />
-        <path d="M 22,18 C 25,-5 45,0 45,20 Z" />
-        <circle cx="20" cy="35" r="7" fill="#050505" />
-        <circle cx="18" cy="35" r="2.5" fill="currentColor" className="animate-[pulse_3s_ease-in-out_infinite]" />
-        <path d="M 28,70 L 22,88 L 12,88 M 42,65 L 45,88 L 55,88" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M 8,43 C -15,45 -10,30 -25,40" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeDasharray="4 2" />
-        <circle cx="-25" cy="40" r="3" />
-      </svg>
+    <div className="min-h-screen bg-gray-900 text-white p-8">
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-6xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-white/5 pb-6">
           <h1 className="text-4xl font-bold text-green-400">Chameleon Lobby</h1>
           <div className="flex items-center gap-4">
@@ -149,7 +120,16 @@ export default function Lobby() {
                   className="w-8 h-8 rounded-full bg-gray-700 transition group-hover:opacity-50"
                 />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <span className="text-xs">🎲</span>
+                  {/* Die SVG */}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="20" height="20" rx="4" fill="#4f46e5" stroke="#818cf8" strokeWidth="1.2"/>
+                    {/* dots: 1-6 face */}
+                    <circle cx="7.5" cy="7.5" r="1.5" fill="white"/>
+                    <circle cx="16.5" cy="7.5" r="1.5" fill="white"/>
+                    <circle cx="12" cy="12" r="1.5" fill="white"/>
+                    <circle cx="7.5" cy="16.5" r="1.5" fill="white"/>
+                    <circle cx="16.5" cy="16.5" r="1.5" fill="white"/>
+                  </svg>
                 </div>
               </div>
               <span className="font-semibold text-gray-200">{user?.username}</span>
@@ -218,7 +198,17 @@ export default function Lobby() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <h3 className="font-bold text-lg text-green-300">{room.name}</h3>
-                        {room.settings.isPrivate && <span className="text-xs bg-gray-900 px-2 py-1 rounded-full border border-gray-600" title="Private Room">🔒</span>}
+                        {room.settings.isPrivate && (
+                          <span className="inline-flex items-center bg-gray-900 px-2 py-1 rounded-full border border-gray-600" title="Private Room">
+                            {/* Padlock SVG */}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <rect x="4" y="11" width="16" height="12" rx="3" fill="#6b7280" stroke="#9ca3af" strokeWidth="1.5"/>
+                              <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+                              <circle cx="12" cy="17" r="1.8" fill="#d1d5db"/>
+                              <line x1="12" y1="18.8" x2="12" y2="21" stroke="#d1d5db" strokeWidth="1.8" strokeLinecap="round"/>
+                            </svg>
+                          </span>
+                        )}
                         <span className={`text-xs px-2 py-1 rounded-full ${room.status === 'lobby' ? 'bg-blue-900/50 text-blue-300' : 'bg-yellow-900/50 text-yellow-300'}`}>
                           {room.status.toUpperCase()}
                         </span>

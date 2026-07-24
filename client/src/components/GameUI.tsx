@@ -232,7 +232,10 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
                     />
                     {hasSubmitted && (
                       <div className="absolute inset-0 flex items-center justify-center animate-pop-in">
-                        <span className="text-2xl drop-shadow-md">✅</span>
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_2px_6px_rgba(34,197,94,0.7)]">
+                          <circle cx="14" cy="14" r="13" fill="#16a34a" stroke="#bbf7d0" strokeWidth="1.5"/>
+                          <polyline points="7,14 12,19 21,9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </div>
                     )}
                     {p.isOnline === false && (
@@ -303,7 +306,12 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
               <h4 className="font-bold mb-4 text-xl">Clue Box</h4>
               {hasSubmittedClue ? (
                   <div className="text-green-400 font-bold text-center py-8 bg-gray-800 rounded border border-green-500/30 animate-pop-in">
-                  Clue submitted! ✅<br/>
+                  <span className="inline-flex items-center gap-2">Clue submitted!
+                    <svg width="18" height="18" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="inline drop-shadow-[0_1px_4px_rgba(34,197,94,0.6)]">
+                      <circle cx="14" cy="14" r="13" fill="#16a34a" stroke="#bbf7d0" strokeWidth="1.5"/>
+                      <polyline points="7,14 12,19 21,9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span><br/>
                   <span className="text-gray-400 text-sm font-normal">Waiting for others...</span>
                 </div>
               ) : (
@@ -412,8 +420,11 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
                       className={`w-16 h-16 rounded-full bg-gray-800 ${hasVoted ? 'border-2 border-green-500' : ''} ${p.isOnline === false ? 'opacity-30 grayscale' : ''}`}
                     />
                     {hasVoted && (
-                      <div className="absolute -bottom-2 -right-2 bg-gray-900 rounded-full w-6 h-6 flex items-center justify-center border border-green-500 text-xs shadow-md animate-pop-in">
-                        ✅
+                      <div className="absolute -bottom-2 -right-2 bg-gray-900 rounded-full w-6 h-6 flex items-center justify-center border border-green-500 shadow-md animate-pop-in">
+                        <svg width="14" height="14" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="14" cy="14" r="13" fill="#16a34a"/>
+                          <polyline points="7,14 12,19 21,9" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </div>
                     )}
                     {p.isOnline === false && (
@@ -498,7 +509,32 @@ export default function GameUI({ socket, code, user, room }: GameUIProps) {
               {[...gameState.players].sort((a:any, b:any) => b.score - a.score).map((p: any) => (
                 <div key={p.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-lg">
                   <span className="font-bold flex items-center gap-2">
-                    {p.id === gameState.chameleonId && <span title="Chameleon">🦎</span>}
+                    {p.id === gameState.chameleonId && (
+                      <span title="Chameleon">
+                        {/* Hand-crafted chameleon silhouette */}
+                        <svg width="22" height="22" viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_0_4px_rgba(74,222,128,0.5)]">
+                          {/* Body */}
+                          <ellipse cx="48" cy="46" rx="26" ry="18" fill="#22c55e"/>
+                          {/* Head */}
+                          <ellipse cx="20" cy="38" rx="14" ry="12" fill="#16a34a"/>
+                          {/* Crest / horn on top of head */}
+                          <path d="M 14,28 C 16,18 22,16 24,26" fill="#15803d" />
+                          {/* Eye ring */}
+                          <circle cx="14" cy="36" r="6" fill="#bbf7d0" />
+                          <circle cx="14" cy="36" r="3.5" fill="#166534" />
+                          <circle cx="13" cy="35" r="1.2" fill="white" />
+                          {/* Mouth / tongue */}
+                          <path d="M 8,42 Q 4,48 2,46 Q 0,44 2,43" stroke="#f87171" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                          {/* Legs */}
+                          <path d="M 36,62 L 32,76 M 52,64 L 50,78 M 62,58 L 66,72 M 44,63 L 42,77" stroke="#16a34a" strokeWidth="4" strokeLinecap="round"/>
+                          {/* Tail */}
+                          <path d="M 72,48 C 84,46 90,52 88,60 C 86,68 80,70 78,66" stroke="#22c55e" strokeWidth="5" fill="none" strokeLinecap="round"/>
+                          {/* Scales hint */}
+                          <ellipse cx="50" cy="38" rx="6" ry="4" fill="#16a34a" opacity="0.5"/>
+                          <ellipse cx="62" cy="42" rx="5" ry="3.5" fill="#16a34a" opacity="0.5"/>
+                        </svg>
+                      </span>
+                    )}
                     {p.username}
                   </span>
                   <span className="text-2xl font-black text-yellow-500">{p.score}</span>
