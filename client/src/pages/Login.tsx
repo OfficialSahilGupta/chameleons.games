@@ -226,179 +226,416 @@ export default function Login() {
         </div>
       </div>
       
-      {/* Right: Login/Register Panel */}
-      <div className="w-full md:w-[450px] lg:w-[500px] bg-[#0a0a0a]/90 backdrop-blur-2xl border-l border-white/5 p-8 md:p-12 flex flex-col justify-center z-10 mt-12 md:mt-0 relative shadow-2xl shadow-black overflow-y-auto">
-        
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-          {/* Removed SVG as requested */}
+      {/* ─── Right: Redesigned Auth Panel ─── */}
+      <div className="w-full md:w-[450px] lg:w-[500px] flex flex-col justify-center z-10 mt-12 md:mt-0 relative overflow-y-auto"
+        style={{ background: 'linear-gradient(160deg, #0c0c0c 0%, #080808 60%, #0a0f0a 100%)' }}>
+
+        {/* Top glow strip — light leaking under a door */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] z-30"
+          style={{ background: 'linear-gradient(90deg, transparent 0%, #22c55e55 30%, #4ade8099 55%, #22c55e55 80%, transparent 100%)' }} />
+        <div className="absolute top-0 left-0 right-0 h-12 pointer-events-none z-20"
+          style={{ background: 'linear-gradient(180deg, rgba(34,197,94,0.06) 0%, transparent 100%)' }} />
+
+        {/* Left border accent */}
+        <div className="absolute top-0 left-0 bottom-0 w-[1px]"
+          style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(34,197,94,0.25) 30%, rgba(34,197,94,0.1) 70%, transparent 100%)' }} />
+
+        {/* Hex-scale SVG texture — like chameleon skin */}
+        <div className="absolute inset-0 opacity-[0.025] pointer-events-none z-0 overflow-hidden">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="hex" x="0" y="0" width="28" height="32" patternUnits="userSpaceOnUse">
+                <polygon points="14,2 26,9 26,23 14,30 2,23 2,9" fill="none" stroke="#4ade80" strokeWidth="0.8"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hex)" />
+          </svg>
         </div>
 
-        <div className="relative z-10">
-          
+        {/* Watching chameleon eye — top-right corner, almost invisible */}
+        <div className="absolute top-6 right-6 opacity-[0.07] pointer-events-none z-0">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Orbital eye ring */}
+            <circle cx="36" cy="36" r="34" stroke="#4ade80" strokeWidth="1.5" fill="none" strokeDasharray="6 4"/>
+            {/* Outer iris */}
+            <circle cx="36" cy="36" r="22" fill="#166534" />
+            {/* Iris pattern rings */}
+            <circle cx="36" cy="36" r="18" stroke="#22c55e" strokeWidth="0.8" fill="none" />
+            <circle cx="36" cy="36" r="13" stroke="#4ade80" strokeWidth="0.6" fill="none" />
+            {/* Pupil — vertical slit like a chameleon */}
+            <ellipse cx="36" cy="36" rx="5" ry="16" fill="#040a04" />
+            {/* Catchlight */}
+            <ellipse cx="39" cy="30" rx="3" ry="4" fill="white" opacity="0.35"/>
+            {/* Outer glow ring */}
+            <circle cx="36" cy="36" r="34" stroke="#22c55e" strokeWidth="0.4" fill="none" opacity="0.5"/>
+          </svg>
+        </div>
+
+        <div className="relative z-10 p-8 md:p-12 flex flex-col justify-center min-h-full">
+
+          {/* ── Sliding Tab Switcher ── */}
+          <style>{`
+            @keyframes panel-fade-up {
+              from { opacity: 0; transform: translateY(10px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+            .panel-content { animation: panel-fade-up 0.3s ease forwards; }
+
+            .auth-input { position: relative; }
+            .auth-input input:focus + .input-accent { transform: scaleY(1); }
+            .input-accent {
+              position: absolute; left: 0; top: 4px; bottom: 4px;
+              width: 3px; border-radius: 2px;
+              background: linear-gradient(180deg, #4ade80, #22c55e);
+              transform: scaleY(0); transform-origin: bottom;
+              transition: transform 0.25s ease;
+            }
+
+            @keyframes btn-pulse {
+              0%, 100% { box-shadow: 0 0 18px rgba(34,197,94,0.3); }
+              50%       { box-shadow: 0 0 32px rgba(34,197,94,0.55); }
+            }
+            .btn-glow-green { animation: btn-pulse 2.5s ease-in-out infinite; }
+
+            @keyframes btn-pulse-white {
+              0%, 100% { box-shadow: 0 0 18px rgba(255,255,255,0.08); }
+              50%       { box-shadow: 0 0 28px rgba(255,255,255,0.18); }
+            }
+            .btn-glow-white { animation: btn-pulse-white 2.5s ease-in-out infinite; }
+          `}</style>
+
+          <div className="relative flex rounded-xl overflow-hidden mb-8 bg-white/5 border border-white/8 p-1 gap-1">
+            {([['guest','Infiltrate'],['login','Sign In'],['register','Register']] as const).map(([m, label]) => (
+              <button
+                key={m}
+                onClick={() => { setMode(m); setUsername(''); setPassword(''); }}
+                className="flex-1 relative py-2.5 text-xs font-bold tracking-widest uppercase transition-all duration-300 rounded-lg"
+                style={{
+                  color: mode === m ? '#fff' : 'rgba(156,163,175,0.7)',
+                  background: mode === m ? 'linear-gradient(135deg, rgba(34,197,94,0.25) 0%, rgba(16,85,47,0.35) 100%)' : 'transparent',
+                  borderColor: mode === m ? 'rgba(34,197,94,0.3)' : 'transparent',
+                  border: mode === m ? '1px solid rgba(34,197,94,0.3)' : '1px solid transparent',
+                  textShadow: mode === m ? '0 0 12px rgba(74,222,128,0.5)' : 'none',
+                }}
+              >
+                {label}
+                {mode === m && (
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full"
+                    style={{ background: 'linear-gradient(90deg, #22c55e, #4ade80)' }} />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* ─── GUEST MODE ─── */}
           {mode === 'guest' && (
-            <>
-              <h2 className="text-3xl font-bold mb-2 text-white">Join the Shadows</h2>
-              <p className="text-gray-400 mb-10 text-sm">Enter a moniker to mask your true identity.</p>
-              
-              <form onSubmit={handleGuestLogin} className="flex flex-col gap-6">
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Alias / Username</label>
-                  <input 
-                    id="login-username"
-                    type="text" 
-                    placeholder="e.g. Phantom, Cipher, Nobody..." 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-green-500/50 focus:bg-white/10 transition-all shadow-inner"
-                    required
-                    maxLength={15}
-                  />
+            <div className="panel-content">
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                  {/* Mask / disguise icon */}
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 14 C4 8 10 4 14 4 C18 4 24 8 24 14 C24 18 21 21 18 21 L17 24 L14 21 L11 24 L10 21 C7 21 4 18 4 14Z" fill="#166534" stroke="#4ade80" strokeWidth="1.2"/>
+                    <ellipse cx="10" cy="13" rx="3" ry="2.5" fill="#040a04" stroke="#4ade80" strokeWidth="0.8"/>
+                    <ellipse cx="18" cy="13" rx="3" ry="2.5" fill="#040a04" stroke="#4ade80" strokeWidth="0.8"/>
+                    <path d="M4 14 C6 11 10 10 10.5 13" stroke="#22c55e" strokeWidth="1" fill="none" opacity="0.5"/>
+                    <path d="M24 14 C22 11 18 10 17.5 13" stroke="#22c55e" strokeWidth="1" fill="none" opacity="0.5"/>
+                  </svg>
+                  <h2 className="text-2xl font-black text-white tracking-tight">Join the Shadows</h2>
                 </div>
-                
-                <button 
-                  type="submit" 
+                <p className="text-gray-500 text-sm leading-relaxed pl-10">
+                  Choose a moniker. No account needed.<br/>
+                  <span className="text-green-500/70">Your identity is your only weapon.</span>
+                </p>
+              </div>
+
+              <form onSubmit={handleGuestLogin} className="flex flex-col gap-5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Alias</label>
+                  <div className="auth-input relative">
+                    <input
+                      id="login-username"
+                      type="text"
+                      placeholder="Phantom, Cipher, Nobody…"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full pl-5 pr-4 py-4 rounded-xl text-white placeholder-gray-700 transition-all duration-200"
+                      style={{
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.09)',
+                        outline: 'none',
+                      }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(34,197,94,0.45)'; e.currentTarget.style.background = 'rgba(34,197,94,0.05)'; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      required
+                      maxLength={15}
+                    />
+                    {/* Left accent bar — lights up on focus via JS above */}
+                    <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full transition-all duration-200 pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, #4ade80, #22c55e)', opacity: username ? 1 : 0 }} />
+                  </div>
+                  <p className="text-[10px] text-gray-600 pl-1">Max 15 characters · No spaces</p>
+                </div>
+
+                <button
+                  type="submit"
                   disabled={loading}
-                  className="w-full mt-2 bg-white text-black hover:bg-gray-200 font-extrabold text-lg py-4 px-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 group shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                  className="btn-glow-white w-full mt-1 font-extrabold text-base py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-40 flex justify-center items-center gap-3 group"
+                  style={{ background: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%)', color: '#040a04' }}
                 >
-                  {loading ? 'Infiltrating...' : 'Enter the Game'}
-                  {!loading && (
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31" strokeDashoffset="10"/></svg>
+                      Infiltrating…
+                    </span>
+                  ) : (
+                    <>
+                      Enter the Game
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </>
                   )}
                 </button>
-                
-                <div className="mt-8 text-center pt-8 border-t border-white/10">
-                  <p className="text-sm text-gray-400 mb-4">Want to save your stats and avatar?</p>
-                  <button 
-                    type="button" 
-                    onClick={() => { setMode('register'); setUsername(''); setPassword(''); }}
-                    className="text-green-400 font-bold hover:text-green-300 underline"
-                  >
-                    Create a free account
-                  </button>
+
+                {/* OR divider */}
+                <div className="relative flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08))' }} />
+                  <span className="text-[10px] uppercase tracking-widest text-gray-600">or</span>
+                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.08), transparent)' }} />
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setMode('register'); setUsername(''); setPassword(''); }}
+                  className="w-full py-3 rounded-xl font-bold text-sm text-green-400 border transition-all duration-200 group"
+                  style={{ borderColor: 'rgba(34,197,94,0.2)', background: 'rgba(34,197,94,0.04)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(34,197,94,0.45)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(34,197,94,0.09)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(34,197,94,0.2)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(34,197,94,0.04)'; }}
+                >
+                  Create a free account — save your stats
+                </button>
               </form>
-            </>
+            </div>
           )}
 
+          {/* ─── REGISTER MODE ─── */}
           {mode === 'register' && (
-            <>
-              <h2 className="text-3xl font-bold mb-2 text-white flex flex-col">
-                Register 
-                <span className="text-green-400 text-xl mt-1 font-medium">– without email!</span>
-              </h2>
-              <div className="text-gray-400 mb-6 text-sm bg-white/5 p-4 rounded-lg border border-white/10">
-                <p className="mb-2 font-bold text-gray-300">Creating an account allows you to:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Add friends</li>
-                  <li>Track personal stats</li>
-                  <li>Upload your custom avatar</li>
-                  <li>Complete quests and earn rewards</li>
-                </ul>
+            <div className="panel-content">
+              <div className="mb-6">
+                <h2 className="text-2xl font-black text-white tracking-tight mb-1">
+                  Create Your Cover
+                  <span className="block text-green-400 text-base font-medium mt-0.5">No email required.</span>
+                </h2>
+                <p className="text-gray-500 text-xs">Your deception starts with a legend. Make it count.</p>
               </div>
-              
-              <form onSubmit={handleRegister} className="flex flex-col gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Username</label>
-                  <input 
-                    type="text" 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 focus:bg-white/10 transition-all shadow-inner"
-                    required
-                    maxLength={15}
-                  />
-                  <p className="text-xs text-gray-500">Needs to be unique, no spaces or special characters</p>
+
+              {/* Perks — SVG icon rows */}
+              <div className="grid grid-cols-2 gap-2 mb-6">
+                {[
+                  {
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="#4ade80" strokeWidth="1.5"/><path d="M2 21c0-4 3-6 7-6" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round"/><circle cx="17" cy="7" r="4" stroke="#22c55e" strokeWidth="1.5"/><path d="M15 21c0-4 3-6 7-6" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+                    text: 'Add friends'
+                  },
+                  {
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 3h18v4H3z" rx="1" stroke="#4ade80" strokeWidth="1.5" strokeLinejoin="round"/><path d="M3 10h7v11H3z" stroke="#4ade80" strokeWidth="1.5" strokeLinejoin="round"/><path d="M13 10h8v5h-8z" stroke="#22c55e" strokeWidth="1.5" strokeLinejoin="round"/><path d="M13 18h8v3h-8z" stroke="#22c55e" strokeWidth="1.5" strokeLinejoin="round"/></svg>,
+                    text: 'Track your stats'
+                  },
+                  {
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="5" stroke="#4ade80" strokeWidth="1.5"/><path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round"/><path d="M16 3.5 C18 2 20 4 19 6" stroke="#22c55e" strokeWidth="1.2" fill="none" strokeLinecap="round"/></svg>,
+                    text: 'Custom avatar'
+                  },
+                  {
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" stroke="#4ade80" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
+                    text: 'Quests & rewards'
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2.5 rounded-lg"
+                    style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.12)' }}>
+                    {item.icon}
+                    <span className="text-xs text-gray-400">{item.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleRegister} className="flex flex-col gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Username</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                      className="w-full pl-5 pr-4 py-3.5 rounded-xl text-white transition-all duration-200"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', outline: 'none' }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(34,197,94,0.45)'; e.currentTarget.style.background = 'rgba(34,197,94,0.05)'; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      required maxLength={15}
+                    />
+                    <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, #4ade80, #22c55e)', opacity: username ? 1 : 0, transition: 'opacity 0.2s' }} />
+                  </div>
+                  <p className="text-[10px] text-gray-600 pl-1">Unique · alphanumeric · max 15 chars</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Password</label>
-                  <input 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 focus:bg-white/10 transition-all shadow-inner"
-                    required
-                    minLength={8}
-                  />
-                  <p className="text-xs text-gray-500">Needs to be at least 8 characters</p>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Password</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-5 pr-4 py-3.5 rounded-xl text-white transition-all duration-200"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', outline: 'none' }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(34,197,94,0.45)'; e.currentTarget.style.background = 'rgba(34,197,94,0.05)'; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      required minLength={8}
+                    />
+                    <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, #4ade80, #22c55e)', opacity: password ? 1 : 0, transition: 'opacity 0.2s' }} />
+                  </div>
+                  <p className="text-[10px] text-gray-600 pl-1">Min 8 characters</p>
                 </div>
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   disabled={loading}
-                  className="w-full mt-2 bg-green-600 text-white hover:bg-green-500 font-extrabold text-lg py-4 px-4 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(22,163,74,0.3)]"
+                  className="btn-glow-green w-full mt-1 font-extrabold text-base py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-40 flex justify-center items-center gap-2 group"
+                  style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff' }}
                 >
-                  {loading ? 'Registering...' : 'Create account'}
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31" strokeDashoffset="10"/></svg>
+                      Registering…
+                    </span>
+                  ) : (
+                    <>
+                      Create Account
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </>
+                  )}
                 </button>
-                
-                <p className="text-xs text-yellow-500/80 bg-yellow-500/10 p-3 rounded border border-yellow-500/20 mt-2">
-                  Because there is no email, it is highly recommended that you store your password with the help of your browser after you register.
+
+                {/* Password save notice */}
+                <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg mt-1"
+                  style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.15)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10" stroke="#eab308" strokeWidth="1.5"/><line x1="12" y1="8" x2="12" y2="12" stroke="#eab308" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1.2" fill="#eab308"/></svg>
+                  <p className="text-[10px] text-yellow-500/70 leading-relaxed">No email means no recovery. Let your browser save your password after registering.</p>
+                </div>
+
+                <p className="text-xs text-gray-500 text-center mt-1">
+                  Already have a cover?{' '}
+                  <button type="button" onClick={() => { setMode('login'); setUsername(''); setPassword(''); }}
+                    className="text-green-400 font-bold hover:text-green-300 transition-colors">
+                    Sign in here.
+                  </button>
                 </p>
-
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-400">
-                    Already have an account?{' '}
-                    <button type="button" onClick={() => { setMode('login'); setUsername(''); setPassword(''); }} className="text-green-400 font-bold hover:underline">
-                      Login here.
-                    </button>
-                  </p>
-                </div>
               </form>
-            </>
+            </div>
           )}
 
+          {/* ─── LOGIN MODE ─── */}
           {mode === 'login' && (
-            <>
-              <h2 className="text-3xl font-bold mb-2 text-white">Welcome Back</h2>
-              <p className="text-gray-400 mb-8 text-sm">Sign in to continue your deception.</p>
-              
+            <div className="panel-content">
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                  {/* Key icon */}
+                  <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="7" stroke="#4ade80" strokeWidth="1.5" fill="none"/>
+                    <circle cx="10" cy="10" r="3" fill="#22c55e" opacity="0.5"/>
+                    <path d="M15 15 L23 23" stroke="#4ade80" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M20 20 L20 23 L23 23" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <h2 className="text-2xl font-black text-white tracking-tight">Welcome Back</h2>
+                </div>
+                <p className="text-gray-500 text-sm pl-10">
+                  Resume your deception.<br/>
+                  <span className="text-green-500/60 text-xs">They never saw you leave.</span>
+                </p>
+              </div>
+
               <form onSubmit={handleLogin} className="flex flex-col gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Username</label>
-                  <input 
-                    type="text" 
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 focus:bg-white/10 transition-all shadow-inner"
-                    required
-                  />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Username</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full pl-5 pr-4 py-4 rounded-xl text-white transition-all duration-200"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', outline: 'none' }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(34,197,94,0.45)'; e.currentTarget.style.background = 'rgba(34,197,94,0.05)'; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      required
+                    />
+                    <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, #4ade80, #22c55e)', opacity: username ? 1 : 0, transition: 'opacity 0.2s' }} />
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Password</label>
-                  <input 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-green-500/50 focus:bg-white/10 transition-all shadow-inner"
-                    required
-                  />
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Password</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-5 pr-4 py-4 rounded-xl text-white transition-all duration-200"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', outline: 'none' }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(34,197,94,0.45)'; e.currentTarget.style.background = 'rgba(34,197,94,0.05)'; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      required
+                    />
+                    <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, #4ade80, #22c55e)', opacity: password ? 1 : 0, transition: 'opacity 0.2s' }} />
+                  </div>
                 </div>
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   disabled={loading}
-                  className="w-full mt-4 bg-white text-black hover:bg-gray-200 font-extrabold text-lg py-4 px-4 rounded-xl transition-all disabled:opacity-50"
+                  className="btn-glow-white w-full mt-2 font-extrabold text-base py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-40 flex justify-center items-center gap-3 group"
+                  style={{ background: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%)', color: '#040a04' }}
                 >
-                  {loading ? 'Authenticating...' : 'Login'}
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31" strokeDashoffset="10"/></svg>
+                      Authenticating…
+                    </span>
+                  ) : (
+                    <>
+                      Sign In
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </>
+                  )}
                 </button>
 
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-gray-400">
-                    Don't have an account?{' '}
-                    <button type="button" onClick={() => { setMode('register'); setUsername(''); setPassword(''); }} className="text-green-400 font-bold hover:underline">
-                      Register here.
-                    </button>
-                  </p>
+                <div className="relative flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08))' }} />
+                  <span className="text-[10px] uppercase tracking-widest text-gray-600">or</span>
+                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.08), transparent)' }} />
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setMode('register'); setUsername(''); setPassword(''); }}
+                  className="w-full py-3 rounded-xl font-bold text-sm text-green-400 border transition-all duration-200"
+                  style={{ borderColor: 'rgba(34,197,94,0.2)', background: 'rgba(34,197,94,0.04)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(34,197,94,0.45)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(34,197,94,0.09)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(34,197,94,0.2)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(34,197,94,0.04)'; }}
+                >
+                  Don't have an account? Register free.
+                </button>
               </form>
-            </>
+            </div>
           )}
-          
+
         </div>
       </div>
+
     </div>
   );
 }
