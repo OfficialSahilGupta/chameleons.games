@@ -8,43 +8,46 @@ interface ChatMessage {
   text: string;
   type: 'chat' | 'system';
   createdAt: string;
+  replyTo?: {
+    messageId: string;
+    username: string;
+    text: string;
+  };
 }
 
 interface ChatPanelProps {
   socket: Socket | null;
   code: string;
   disabled?: boolean;
+  players?: string[];
+  currentUsername?: string;
 }
 
-export default function ChatPanel({ socket, code, disabled = false }: ChatPanelProps) {
+export default function ChatPanel({ socket, code, disabled = false, players = [], currentUsername = '' }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!socket) return;
 
-    // Fetch history
     socket.emit('chat:history', { code }, (res: any) => {
       if (res.success && res.history) {
         setMessages(res.history);
       }
     });
 
-    // Listen for new messages
     const handleNewMessage = (msg: ChatMessage) => {
       setMessages(prev => [...prev, msg]);
     };
 
     socket.on('chat:message', handleNewMessage);
-
-    return () => {
-      socket.off('chat:message', handleNewMessage);
-    };
+    return () => { socket.off('chat:message', handleNewMessage); };
   }, [socket, code]);
 
   useEffect(() => {
-    // Auto-scroll to bottom
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -54,53 +57,119 @@ export default function ChatPanel({ socket, code, disabled = false }: ChatPanelP
     e.preventDefault();
     if (!inputText.trim() || !socket || disabled) return;
     
-    socket.emit('chat:send', { code, text: inputText.trim() });
+    const payload: any = { code, text: inputText.trim() };
+    if (replyTo) {
+      payload.replyTo = {
+        messageId: replyTo._id,
+        username: replyTo.username,
+        text: replyTo.text
+      };
+    }
+    
+    socket.emit('chat:send', payload);
     setInputText('');
+    setReplyTo(null);
   };
 
+  const handleReplyClick = (msg: ChatMessage) => {
+    setReplyTo(msg);
+    inputRef.current?.focus();
+  };
+
+  // Function to render text with highlighted @mentions
+  const renderTextWithMentions = (text: string) => {
+    const parts = text.split(/(@\w+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        const name = part.substring(1);
+        const isMe = name === currentUsername;
+        const isPlayer = players.includes(name);
+        if (isMe) {
+          return <span key={i} className="text-yellow-400 font-bold bg-yellow-900/30 px-1 rounded">{part}</span>;
+        } else if (isPlayer) {
+          return <span key={i} className="text-blue-400 font-bold bg-blue-900/30 px-1 rounded">{part}</span>;
+        }
+        return <span key={i} className="text-gray-300 font-semibold">{part}</span>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  // Filter out system messages since they are now handled by toast notifications in Room.tsx
+  const chatMessages = messages.filter(m => m.type !== 'system');
+
   return (
-    <div className="flex flex-col h-full bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden">
-      <div className="bg-gray-800 p-3 border-b border-gray-700">
-        <h3 className="font-bold text-gray-200">Room Chat</h3>
+    <div className="flex flex-col h-full bg-slate-900/40 rounded-2xl overflow-hidden backdrop-blur-md">
+      <div className="bg-slate-950/60 p-4 border-b border-white/5 shrink-0">
+        <h3 className="font-bold text-gray-300 text-xs tracking-widest uppercase">Room Comms</h3>
       </div>
       
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar"
+        className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar"
       >
-        {messages.length === 0 ? (
-          <div className="text-gray-500 text-sm text-center italic mt-10">No messages yet.</div>
+        {chatMessages.length === 0 ? (
+          <div className="text-gray-500 text-xs font-bold tracking-widest uppercase text-center mt-10 opacity-50">No comms established.</div>
         ) : (
-          messages.map(msg => (
-            <div key={msg._id} className={`text-sm ${msg.type === 'system' ? 'text-center' : ''}`}>
-              {msg.type === 'system' ? (
-                <span className="bg-gray-800 text-gray-400 px-3 py-1 rounded-full text-xs font-semibold inline-block mx-auto border border-gray-700 shadow-inner">
-                  {msg.text}
-                </span>
-              ) : (
-                <div className="flex flex-col">
-                  <span className="font-bold text-blue-400 text-xs mb-1">{msg.username}</span>
-                  <span className="text-gray-200 bg-gray-800 p-2 rounded-lg rounded-tl-none border border-gray-700 shadow-sm inline-block max-w-[90%] break-words">
-                    {msg.text}
+          chatMessages.map(msg => {
+            const isMe = msg.username === currentUsername;
+            return (
+              <div key={msg._id} className={`flex flex-col group ${isMe ? 'items-end' : 'items-start'}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] font-bold tracking-widest uppercase ${isMe ? 'text-green-400' : 'text-blue-400'}`}>
+                    {msg.username}
                   </span>
+                  <button 
+                    onClick={() => handleReplyClick(msg)}
+                    className="opacity-0 group-hover:opacity-100 text-[9px] text-gray-500 hover:text-white uppercase tracking-widest transition-opacity"
+                  >
+                    Reply
+                  </button>
                 </div>
-              )}
-            </div>
-          ))
+
+                <div className={`relative max-w-[85%] ${isMe ? 'items-end' : 'items-start'}`}>
+                  {msg.replyTo && (
+                    <div className="bg-slate-800/80 border-l-2 border-slate-500 p-2 rounded-t-lg text-[10px] text-gray-400 mb-[-5px] pb-3 truncate max-w-full">
+                      <span className="font-bold text-gray-300">@{msg.replyTo.username}:</span> {msg.replyTo.text}
+                    </div>
+                  )}
+                  
+                  <div className={`relative z-10 px-4 py-2.5 text-sm rounded-2xl shadow-lg border ${
+                    isMe 
+                      ? 'bg-green-900/20 text-green-50 border-green-500/20 rounded-tr-none' 
+                      : 'bg-slate-800/60 text-gray-100 border-white/5 rounded-tl-none'
+                  }`}>
+                    <span className="break-words leading-relaxed">
+                      {renderTextWithMentions(msg.text)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
-      <form onSubmit={handleSend} className="p-3 bg-gray-800 border-t border-gray-700">
-        <input 
-          type="text" 
-          value={inputText}
-          onChange={e => setInputText(e.target.value)}
-          placeholder={disabled ? "Chat disabled right now..." : "Type a message..."}
-          disabled={disabled}
-          maxLength={200}
-          className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white"
-        />
-      </form>
+      <div className="bg-slate-950/60 border-t border-white/5 shrink-0 flex flex-col">
+        {replyTo && (
+          <div className="bg-slate-800/90 px-4 py-2 flex justify-between items-center text-xs border-b border-white/5">
+            <span className="text-gray-400 truncate"><span className="text-blue-400 font-bold">Replying to {replyTo.username}:</span> {replyTo.text}</span>
+            <button onClick={() => setReplyTo(null)} className="text-gray-500 hover:text-white ml-2">&times;</button>
+          </div>
+        )}
+        <form onSubmit={handleSend} className="p-3">
+          <input 
+            ref={inputRef}
+            type="text" 
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            placeholder={disabled ? "Comms offline..." : "Type message or @player..."}
+            disabled={disabled}
+            maxLength={200}
+            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500/50 focus:bg-slate-800 transition-all disabled:opacity-50 text-white placeholder-gray-500"
+          />
+        </form>
+      </div>
     </div>
   );
 }

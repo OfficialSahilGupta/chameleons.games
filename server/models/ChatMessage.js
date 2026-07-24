@@ -10,6 +10,11 @@ const ChatMessageSchema = new mongoose.Schema({
     type: String,
     enum: ['chat', 'system'],
     default: 'chat'
+  },
+  replyTo: {
+    messageId: { type: String },
+    username: { type: String },
+    text: { type: String }
   }
 });
 

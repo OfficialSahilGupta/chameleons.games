@@ -16,6 +16,7 @@ export default function Room() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [gamePhase, setGamePhase] = useState<string>('lobby');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<{id: string, text: string}[]>([]);
 
   useEffect(() => {
     if (!token || !user) {
@@ -53,6 +54,14 @@ export default function Room() {
       if (String(currentUserId) === String(kickedUserId)) {
         navigate('/lobby', { state: { errorMsg: 'You have been kicked out of the room. Please create or join another room.' } });
       }
+    });
+
+    newSocket.on('room:notification', ({ text }) => {
+      const id = Math.random().toString(36).substring(7);
+      setNotifications(prev => [...prev, { id, text }]);
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+      }, 5000);
     });
 
     return () => {
@@ -138,6 +147,16 @@ export default function Room() {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(0,0,0,0.5);
         }
       `}</style>
+
+      {/* TOAST NOTIFICATIONS */}
+      <div className="fixed top-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none">
+        {notifications.map(n => (
+          <div key={n.id} className="bg-slate-800/90 border border-slate-700/50 backdrop-blur-xl text-white px-5 py-3 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] text-sm font-bold tracking-wide animate-[fade-up_0.3s_ease-out] flex items-center gap-3">
+            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {n.text}
+          </div>
+        ))}
+      </div>
 
       {/* HEADER */}
       <header className="flex-none p-6 md:px-12 flex justify-between items-center z-20 border-b border-white/5 bg-black/20 backdrop-blur-md">
@@ -305,7 +324,9 @@ export default function Room() {
               <ChatPanel 
                 socket={socket} 
                 code={code as string} 
-                disabled={gamePhase === 'clue_writing'} 
+                disabled={gamePhase === 'clue_writing'}
+                players={room.players.map((p: any) => p.userId.username)}
+                currentUsername={user?.username}
               />
             </div>
           </div>

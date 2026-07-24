@@ -274,9 +274,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('chat:send', async ({ code, text }, callback) => {
+  socket.on('chat:send', async ({ code, text, replyTo }, callback) => {
     try {
-      await chatService.addMessage(code, socket.user.id, socket.user.username, text);
+      await chatService.addMessage(code, socket.user.id, socket.user.username, text, 'chat', replyTo);
       if (callback) callback({ success: true });
     } catch (err) {
       if (callback) callback({ success: false, message: err.message });

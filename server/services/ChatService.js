@@ -28,7 +28,7 @@ class ChatService {
       .lean();
   }
 
-  async addMessage(roomCode, userId, username, text, type = 'chat') {
+  async addMessage(roomCode, userId, username, text, type = 'chat', replyTo = null) {
     const room = await Room.findOne({ code: roomCode });
     if (!room) throw new Error('Room not found');
 
@@ -39,7 +39,8 @@ class ChatService {
       userId,
       username,
       text: cleanText,
-      type
+      type,
+      replyTo
     });
 
     await msg.save();
@@ -52,6 +53,7 @@ class ChatService {
         username,
         text: cleanText,
         type,
+        replyTo,
         createdAt: msg.createdAt
       });
     }
@@ -60,7 +62,9 @@ class ChatService {
   }
 
   async addSystemMessage(roomCode, text) {
-    return this.addMessage(roomCode, null, 'System', text, 'system');
+    if (this.io) {
+      this.io.to(`room:${roomCode}`).emit('room:notification', { text });
+    }
   }
 }
 
