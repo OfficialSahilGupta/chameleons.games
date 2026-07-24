@@ -179,16 +179,16 @@ export default function Room() {
       </header>
 
       {/* MAIN LAYOUT */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-6 md:p-8 z-10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="flex-1 overflow-hidden p-6 md:p-8 z-10 flex flex-col">
+        <div className="max-w-7xl mx-auto w-full h-full grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-0">
           
           {/* Main Content Area */}
-          <div className="lg:col-span-8 flex flex-col">
+          <div className="lg:col-span-8 flex flex-col min-h-[60vh] lg:min-h-0 h-full">
             {room.status !== 'lobby' ? (
               <GameUI socket={socket} code={code as string} user={user} room={room} />
             ) : (
-              <div className="glass-panel rounded-2xl p-6 md:p-8 flex flex-col flex-1 min-h-[60vh]">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-white/5 pb-6 gap-4">
+              <div className="glass-panel rounded-2xl p-6 md:p-8 flex flex-col h-full min-h-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-white/5 pb-6 gap-4 shrink-0">
                   <h2 className="text-2xl font-bold tracking-wider">PLAYERS <span className="text-green-500 text-lg ml-2">({room.players.length}/{room.settings.maxPlayers})</span></h2>
                   {!isHost && room.status === 'lobby' && (
                     <button 
@@ -200,7 +200,8 @@ export default function Room() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="flex-1 overflow-y-auto no-scrollbar min-h-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {room.players.map((p: any) => {
                     const isPlayerHost = String(p.userId._id || p.userId) === String(room.hostId._id || room.hostId);
                     const isSelected = String(selectedPlayerId) === String(p.userId._id || p.userId);
@@ -269,10 +270,11 @@ export default function Room() {
                       </div>
                     );
                   })}
+                  </div>
                 </div>
 
                 {/* ROOM RULES & START GAME FOOTER */}
-                <div className="mt-auto pt-8 border-t border-white/5">
+                <div className="mt-6 pt-6 border-t border-white/5 shrink-0">
                   <div className="bg-slate-950/60 rounded-2xl p-5 md:p-6 border border-white/5 shadow-inner flex flex-col xl:flex-row justify-between items-center gap-8">
                     
                     {/* Stats Grid */}
@@ -336,9 +338,8 @@ export default function Room() {
           </div>
 
           {/* Right Sidebar */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-
-            <div className="w-full h-[600px] lg:h-[750px] glass-panel rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+          <div className="lg:col-span-4 flex flex-col gap-6 h-[600px] lg:h-full min-h-0">
+            <div className="w-full h-full glass-panel rounded-2xl overflow-hidden flex flex-col shadow-2xl">
               <ChatPanel 
                 socket={socket} 
                 code={code as string} 
