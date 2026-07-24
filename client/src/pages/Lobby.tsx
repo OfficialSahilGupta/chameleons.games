@@ -128,10 +128,6 @@ export default function Lobby() {
         }
       `}</style>
 
-      {/* ambient blobs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-[pulse_10s_ease-in-out_infinite] animate-camouflage pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[30%] w-[60vw] h-[60vw] bg-blue-900/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
-
       {/* watermark chameleon eye */}
       <div className="absolute bottom-10 right-10 pointer-events-none" style={{ opacity: 0.04 }}>
         <svg width="400" height="400" viewBox="0 0 200 220" fill="none" className="animate-camouflage">
