@@ -97,9 +97,27 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row relative overflow-hidden font-sans">
       
-      {/* Background Ambient Effects */}
+      {/* Background Ambient Effects & Chameleon Art */}
       <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-pulse pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[30%] w-[60vw] h-[60vw] bg-red-900/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
+      
+      {/* Massive subtle chameleon graphic hanging in the background */}
+      <svg className="absolute w-[800px] h-[800px] text-green-500/5 -left-32 top-10 -z-10 rotate-[-10deg] pointer-events-none drop-shadow-[0_0_50px_rgba(34,197,94,0.1)]" viewBox="-30 -10 140 140" fill="currentColor">
+        {/* Curled Tail */}
+        <path d="M 30,70 A 25,25 0 1,0 80,70 A 20,20 0 1,1 40,70 A 15,15 0 1,0 70,70 A 10,10 0 1,1 50,70" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+        {/* Main Body */}
+        <path d="M 30,70 C 10,80 0,60 10,40 C 20,10 50,15 50,45 C 50,60 40,70 30,70 Z" />
+        {/* Head Casque (Crest) */}
+        <path d="M 22,18 C 25,-5 45,0 45,20 Z" />
+        {/* Chameleon Eye (Swiveling) */}
+        <circle cx="20" cy="35" r="7" fill="#050505" />
+        <circle cx="18" cy="35" r="2.5" fill="currentColor" className="animate-[pulse_3s_ease-in-out_infinite]" />
+        {/* Front & Back Legs */}
+        <path d="M 28,70 L 22,88 L 12,88 M 42,65 L 45,88 L 55,88" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Extended Tongue */}
+        <path d="M 8,43 C -15,45 -10,30 -25,40" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeDasharray="4 2" />
+        <circle cx="-25" cy="40" r="3" />
+      </svg>
       
       {/* Top Header */}
       <div className="absolute top-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
@@ -162,9 +180,7 @@ export default function Login() {
       <div className="w-full md:w-[450px] lg:w-[500px] bg-[#0a0a0a]/90 backdrop-blur-2xl border-l border-white/5 p-8 md:p-12 flex flex-col justify-center z-10 mt-12 md:mt-0 relative shadow-2xl shadow-black overflow-y-auto">
         
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-          <svg className="w-48 h-48 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-          </svg>
+          {/* Removed SVG as requested */}
         </div>
 
         <div className="relative z-10">
