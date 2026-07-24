@@ -339,16 +339,28 @@ setInterval(async () => {
       const roomClients = io.sockets.adapter.rooms.get(`room:${room.code}`);
       if (!roomClients || roomClients.size === 0) {
         // No active socket connections for this room
-        // If it's empty or inactive, mark it as finished or delete it
-        room.status = 'finished';
-        await room.save();
-        
-        // Also cleanup game engine if it was active
-        const engine = require('./services/GameEngine');
-        if (engine.ACTIVE_GAMES) {
-          engine.ACTIVE_GAMES.delete(room.code);
+        if (!room.emptySince) {
+          // Just became empty (or wasn't tracked), start the timer
+          room.emptySince = new Date();
+          await room.save();
+        } else if (Date.now() - new Date(room.emptySince).getTime() > 2 * 60 * 1000) {
+          // Empty for > 2 mins, now we can safely destroy it
+          room.status = 'finished';
+          await room.save();
+          
+          // Also cleanup game engine if it was active
+          const engine = require('./services/GameEngine');
+          if (engine.ACTIVE_GAMES) {
+            engine.ACTIVE_GAMES.delete(room.code);
+          }
+          cleanedCount++;
         }
-        cleanedCount++;
+      } else {
+        // Has active connections, make sure empty timer is cleared
+        if (room.emptySince) {
+          room.emptySince = null;
+          await room.save();
+        }
       }
     }
     

@@ -31,7 +31,8 @@ const RoomSchema = new mongoose.Schema({
   }],
   bannedPlayers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   currentRound: { type: Number, default: 1 },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  emptySince: { type: Date, default: null }
 });
 
 module.exports = mongoose.model('Room', RoomSchema);

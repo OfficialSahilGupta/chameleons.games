@@ -88,6 +88,7 @@ class RoomService {
     
     if (existingPlayer) {
       existingPlayer.isConnected = true;
+      room.emptySince = null; // Clear grace period if rejoining
       return room.save();
     }
 
@@ -100,6 +101,8 @@ class RoomService {
       isReady: false,
       isConnected: true
     });
+    
+    room.emptySince = null; // Clear grace period when someone joins
     
     return room.save();
   }
@@ -128,8 +131,8 @@ class RoomService {
     room.players = room.players.filter(p => p.userId._id.toString() !== userId.toString());
 
     if (room.players.length === 0) {
-      // Room empty, delete it?
-      room.status = 'finished'; // Or delete
+      // Room empty, start the 2-minute grace period
+      room.emptySince = new Date();
     } else if (room.hostId._id.toString() === userId.toString()) {
       // Host migration
       room.hostId = room.players[0].userId;
