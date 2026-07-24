@@ -176,8 +176,9 @@ class GameEngine {
       });
     }
 
-    // Check if everyone submitted
-    if (game.clues.length === game.players.length) {
+    // Check if everyone online submitted
+    const expectedClues = game.players.filter(p => p.isOnline !== false).length;
+    if (game.clues.length >= expectedClues) {
       clearTimeout(game.timerTimeout);
       this.endClueWriting(roomCode);
     }
@@ -260,7 +261,8 @@ class GameEngine {
       this.io.to(`room:${roomCode}`).emit('vote:submitted', { userId: voterId });
     }
 
-    if (game.votes.length === game.players.length) {
+    const expectedVotes = game.players.filter(p => p.isOnline !== false).length;
+    if (game.votes.length >= expectedVotes) {
       clearTimeout(game.timerTimeout);
       this.endVoting(roomCode);
     }
