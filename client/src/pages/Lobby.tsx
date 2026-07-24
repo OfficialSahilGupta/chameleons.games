@@ -202,7 +202,7 @@ export default function Lobby() {
                       onChange={e => setFilterCategory(e.target.value)}
                       className="appearance-none bg-black/20 border border-white/10 rounded-full px-5 py-2 text-xs font-bold tracking-widest text-gray-300 focus:outline-none focus:border-green-500 cursor-pointer hover:bg-white/5 transition pr-10"
                     >
-                      <option value="" className="bg-gray-900">ALL FILES</option>
+                      <option value="" className="bg-gray-900">ALL CATEGORIES</option>
                       {activeCategories.map(cat => (
                         <option key={cat} value={cat} className="bg-gray-900">{cat.toUpperCase()}</option>
                       ))}
