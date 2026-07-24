@@ -256,7 +256,7 @@ export default function Login() {
               onClick={() => alert("HOW TO PLAY:\n\n1. Everyone gets a secret word except the Chameleon.\n2. Each player says one related word to prove they know the secret.\n3. The Chameleon must deduce the word and blend in.\n4. Vote out the Chameleon — or the Chameleon wins by guessing the word!")}
               className="px-8 py-4 bg-transparent border border-gray-700 hover:border-gray-500 hover:bg-gray-800/50 text-gray-300 hover:text-white font-bold rounded-xl transition-all"
             >
-              How to Play
+              Learn in 2 Minutes
             </button>
           </div>
         </div>
