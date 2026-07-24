@@ -88,7 +88,7 @@ export default function Login() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row relative overflow-hidden font-sans">
+    <div className="h-[100dvh] w-full bg-[#050505] text-white flex flex-col md:flex-row relative overflow-hidden font-sans">
 
       <style>{`
         @keyframes camouflage {
@@ -181,6 +181,11 @@ export default function Login() {
         .ch-show-up   { animation: ch-slide-up-in 0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
         .ch-hide-down { animation: ch-slide-down  0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
         .ch-show-down { animation: ch-slide-down-in 0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
       {/* ambient blobs */}
@@ -224,18 +229,18 @@ export default function Login() {
       </div>
 
       {/* ═══════════════════════════ LEFT HERO ═══════════════════════════ */}
-      <div className="flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24 pt-28 md:pt-0 z-10">
+      <div className="flex-1 flex flex-col justify-center px-6 md:px-12 lg:px-20 pt-20 md:pt-0 z-10 min-h-0">
         <div className="max-w-2xl">
-          <div className="inline-block px-4 py-2 mb-8 border border-green-500/30 bg-green-500/10 text-green-400 rounded-full text-xs md:text-sm font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(34,197,94,0.15)]">
+          <div className="inline-block px-3 py-1.5 mb-6 border border-green-500/30 bg-green-500/10 text-green-400 rounded-full text-[10px] md:text-xs font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(34,197,94,0.15)]">
             A Psychological Game of Deception
           </div>
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.05] tracking-tighter">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.05] tracking-tighter">
             TRUST <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-500 via-gray-300 to-white">NO ONE.</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-400 mb-12 leading-relaxed max-w-xl font-light">
+          <p className="text-base md:text-lg text-gray-400 mb-8 leading-relaxed max-w-xl font-light">
             A secret word is shared among everyone—except the <strong className="text-green-500 font-bold">Chameleon</strong>.{' '}
-            Blend in, manipulate the truth, or hunt down the liar before they steal the game.
+            Blend in, manipulate the truth, or hunt down the liar before they steal the game. Are you a villager, or are you hiding in plain sight?
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <button
@@ -267,8 +272,8 @@ export default function Login() {
         Chameleon reacts: head slides up, tail slides down.
       */}
         {/* ═══ TOP CHAMELEON — peeks down at the card ═══ */}
-      <div className="w-full md:w-[440px] lg:w-[480px] min-h-screen flex flex-col z-10 px-4 md:px-8">
-        <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0 pb-3 pointer-events-none">
+      <div className="w-full md:w-[440px] lg:w-[480px] h-[100dvh] flex flex-col z-10 px-4 md:px-8">
+        <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0 pb-3 pointer-events-none shrink">
           <div
             className={mode === 'register' ? 'ch-hide-up' : 'ch-show-up'}
             style={{ willChange: 'transform, opacity' }}
@@ -355,7 +360,7 @@ export default function Login() {
         </div>
 
         {/* ═══ AUTH CARD ═══ */}
-        <div className="w-full relative rounded-2xl overflow-hidden shrink-0"
+        <div className="w-full relative rounded-2xl overflow-y-auto overflow-x-hidden min-h-0 shrink-0 max-h-[85vh] no-scrollbar"
           style={{
             background: 'rgba(255,255,255,0.025)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -552,7 +557,7 @@ export default function Login() {
         </div>{/* /card */}
 
         {/* ═══ BOTTOM CHAMELEON — tail coils up from below ═══ */}
-        <div className="flex-1 flex items-start justify-center overflow-hidden min-h-0 pt-3 pointer-events-none">
+        <div className="flex-1 flex items-start justify-center overflow-hidden min-h-0 pt-3 pointer-events-none shrink">
           <div
             className={mode === 'register' ? 'ch-hide-down' : 'ch-show-down'}
             style={{ willChange: 'transform, opacity' }}
