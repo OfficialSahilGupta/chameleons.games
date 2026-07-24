@@ -111,6 +111,76 @@ export default function Login() {
         .btn-g { animation: glow-g 2.5s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .spin { animation: spin 0.75s linear infinite; }
+
+        /* ── Chameleon idle animations ── */
+        @keyframes ch-sway {
+          0%,100% { transform: translateX(0px) rotate(0deg); }
+          30%     { transform: translateX(-5px) rotate(-1.2deg); }
+          70%     { transform: translateX(5px) rotate(1.2deg); }
+        }
+        .ch-sway { animation: ch-sway 6s ease-in-out infinite; }
+
+        @keyframes ch-breathe {
+          0%,100% { transform: scaleY(1); }
+          50%     { transform: scaleY(0.96); }
+        }
+        .ch-breathe { animation: ch-breathe 4s ease-in-out infinite; transform-origin: top center; }
+
+        @keyframes eye-l {
+          0%,100% { transform: translate(0px, 0px); }
+          25%     { transform: translate(-3px, 2px); }
+          50%     { transform: translate(1px, -2px); }
+          75%     { transform: translate(3px, 1px); }
+        }
+        .eye-l { animation: eye-l 7s ease-in-out infinite; }
+
+        @keyframes eye-r {
+          0%,100% { transform: translate(0px, 0px); }
+          25%     { transform: translate(3px, -1px); }
+          50%     { transform: translate(-2px, 2px); }
+          75%     { transform: translate(-3px, -2px); }
+        }
+        .eye-r { animation: eye-r 8.5s ease-in-out infinite; }
+
+        @keyframes tongue-flick {
+          0%,78%,100% { transform: scaleY(0); opacity: 0; }
+          80%         { transform: scaleY(1); opacity: 1; }
+          88%         { transform: scaleY(1); opacity: 1; }
+          92%         { transform: scaleY(0); opacity: 0; }
+        }
+        .tongue { animation: tongue-flick 9s ease-in-out infinite; transform-origin: top center; }
+
+        @keyframes tail-wave {
+          0%,100% { d: path("M 100,0 C 90,20 70,30 60,55 C 48,82 55,105 45,125 C 32,150 15,155 20,175"); }
+          50%     { d: path("M 100,0 C 110,20 130,30 140,55 C 152,82 145,105 155,125 C 168,150 185,155 180,175"); }
+        }
+
+        @keyframes tail-swing {
+          0%,100% { transform: rotate(-8deg); }
+          50%     { transform: rotate(8deg); }
+        }
+        .tail-swing { animation: tail-swing 5s ease-in-out infinite; transform-origin: top center; }
+
+        @keyframes ch-slide-up {
+          from { transform: translateY(0);   opacity: 1; }
+          to   { transform: translateY(-70px); opacity: 0; }
+        }
+        @keyframes ch-slide-up-in {
+          from { transform: translateY(-70px); opacity: 0; }
+          to   { transform: translateY(0);   opacity: 1; }
+        }
+        @keyframes ch-slide-down {
+          from { transform: translateY(0);   opacity: 1; }
+          to   { transform: translateY(70px);  opacity: 0; }
+        }
+        @keyframes ch-slide-down-in {
+          from { transform: translateY(70px);  opacity: 0; }
+          to   { transform: translateY(0);   opacity: 1; }
+        }
+        .ch-hide-up   { animation: ch-slide-up   0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .ch-show-up   { animation: ch-slide-up-in 0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .ch-hide-down { animation: ch-slide-down  0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .ch-show-down { animation: ch-slide-down-in 0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
       `}</style>
 
       {/* ambient blobs */}
@@ -187,17 +257,105 @@ export default function Login() {
         </div>
       </div>
 
-      {/* ═══════════════════════════ RIGHT AUTH CARD ═══════════════════════════ */}
+      {/* ═══════════════════════════ RIGHT COLUMN ═══════════════════════════ */}
       {/*
-        Design decisions:
-        - This is a CARD floating inside the right column over the shared dark bg.
-          Not a full-bleed panel — the page bg shows through via backdrop-blur.
-        - Left side glow border provides visual separation without a background change.
-        - Tab switcher inside the card is the ONLY mode control — header nav removed.
-        - Faint chameleon scale texture + slit-eye watermark tie it to game theme.
+        3-part flex-col layout:
+          [1] Top section (flex-1) — chameleon head peers DOWN at the card
+          [2] Card (shrink-0)      — the frosted glass auth panel
+          [3] Bottom section (flex-1) — chameleon tail coils UP from below
+        When Register mode → card is tallest → top/bottom sections shrink naturally.
+        Chameleon reacts: head slides up, tail slides down.
       */}
-      <div className="w-full md:w-[440px] lg:w-[480px] min-h-screen flex items-center justify-center z-10 px-6 md:px-8 py-20">
-        <div className="w-full relative rounded-2xl overflow-hidden"
+        {/* ═══ TOP CHAMELEON — peeks down at the card ═══ */}
+      <div className="w-full md:w-[440px] lg:w-[480px] min-h-screen flex flex-col z-10 px-4 md:px-8">
+        <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0 pb-3 pointer-events-none">
+          <div
+            className={mode === 'register' ? 'ch-hide-up' : 'ch-show-up'}
+            style={{ willChange: 'transform, opacity' }}
+          >
+            {/* ch-sway wraps the whole body for gentle swaying */}
+            <div className="ch-sway">
+              <svg
+                width="180" height="210"
+                viewBox="0 0 200 220"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* ── Neck / body coming FROM above, tapering to the head at bottom ── */}
+                <g className="ch-breathe">
+                  {/* Neck */}
+                  <path
+                    d="M 82,0 C 76,30 72,60 68,85 C 64,108 60,118 60,135 C 60,160 75,175 100,175 C 125,175 140,160 140,135 C 140,118 136,108 132,85 C 128,60 124,30 118,0"
+                    fill="#166534" opacity="0.85"
+                  />
+                  {/* Spine ridge — dorsal crest bumps */}
+                  {[8,30,52,74,96].map((y,i) => (
+                    <ellipse key={i} cx="100" cy={y} rx="5" ry="4" fill="#15803d" opacity="0.7"/>
+                  ))}
+                  {/* Scale pattern hint */}
+                  <path d="M 78,40 C 88,35 112,35 122,40" stroke="#22c55e" strokeWidth="1" opacity="0.3" fill="none"/>
+                  <path d="M 74,65 C 86,59 114,59 126,65" stroke="#22c55e" strokeWidth="1" opacity="0.3" fill="none"/>
+                  <path d="M 72,90 C 85,84 115,84 128,90" stroke="#22c55e" strokeWidth="1" opacity="0.3" fill="none"/>
+                </g>
+
+                {/* ── HEAD ── */}
+                {/* Snout / jaw */}
+                <path d="M 72,138 C 65,145 65,165 80,172 Q 100,180 120,172 C 135,165 135,145 128,138 L 115,130 L 85,130 Z" fill="#15803d"/>
+                {/* Upper lip */}
+                <path d="M 78,140 Q 100,148 122,140" stroke="#22c55e" strokeWidth="1.5" fill="none" opacity="0.6"/>
+                {/* Nostril */}
+                <ellipse cx="88" cy="152" rx="2.5" ry="2" fill="#052e16" opacity="0.7"/>
+                <ellipse cx="112" cy="152" rx="2.5" ry="2" fill="#052e16" opacity="0.7"/>
+
+                {/* ── LEFT EYE TURRET ── */}
+                <g className="eye-l">
+                  {/* Orbital bump */}
+                  <ellipse cx="74" cy="128" rx="17" ry="19" fill="#14532d"/>
+                  {/* Outer ring */}
+                  <ellipse cx="74" cy="128" rx="13" ry="15" fill="#166534"/>
+                  {/* Iris */}
+                  <ellipse cx="74" cy="128" rx="9" ry="11" fill="#15803d"/>
+                  {/* Scale rings on eyeball */}
+                  <ellipse cx="74" cy="128" rx="9" ry="11" fill="none" stroke="#22c55e" strokeWidth="0.8" opacity="0.5"/>
+                  <ellipse cx="74" cy="128" rx="5.5" ry="7" fill="none" stroke="#4ade80" strokeWidth="0.6" opacity="0.4"/>
+                  {/* Pupil — vertical slit */}
+                  <ellipse cx="74" cy="128" rx="3" ry="9" fill="#020a02"/>
+                  {/* Catchlight */}
+                  <ellipse cx="77" cy="123" rx="2.5" ry="3.5" fill="white" opacity="0.35"/>
+                  {/* Eyelid ring */}
+                  <ellipse cx="74" cy="128" rx="17" ry="19" fill="none" stroke="#16a34a" strokeWidth="1.2" opacity="0.5"/>
+                </g>
+
+                {/* ── RIGHT EYE TURRET ── */}
+                <g className="eye-r">
+                  <ellipse cx="126" cy="128" rx="17" ry="19" fill="#14532d"/>
+                  <ellipse cx="126" cy="128" rx="13" ry="15" fill="#166534"/>
+                  <ellipse cx="126" cy="128" rx="9" ry="11" fill="#15803d"/>
+                  <ellipse cx="126" cy="128" rx="9" ry="11" fill="none" stroke="#22c55e" strokeWidth="0.8" opacity="0.5"/>
+                  <ellipse cx="126" cy="128" rx="5.5" ry="7" fill="none" stroke="#4ade80" strokeWidth="0.6" opacity="0.4"/>
+                  <ellipse cx="126" cy="128" rx="3" ry="9" fill="#020a02"/>
+                  <ellipse cx="123" cy="123" rx="2.5" ry="3.5" fill="white" opacity="0.35"/>
+                  <ellipse cx="126" cy="128" rx="17" ry="19" fill="none" stroke="#16a34a" strokeWidth="1.2" opacity="0.5"/>
+                </g>
+
+                {/* ── TONGUE — shoots down toward the card ── */}
+                <g className="tongue">
+                  {/* Tongue stem */}
+                  <line x1="100" y1="172" x2="100" y2="210" stroke="#dc2626" strokeWidth="4" strokeLinecap="round"/>
+                  {/* Sticky tip */}
+                  <ellipse cx="100" cy="212" rx="6" ry="5" fill="#ef4444"/>
+                  <ellipse cx="100" cy="212" rx="3" ry="2.5" fill="#fca5a5" opacity="0.6"/>
+                </g>
+
+                {/* ── Green ambient glow below head ── */}
+                <ellipse cx="100" cy="185" rx="40" ry="12" fill="#22c55e" opacity="0.06"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ AUTH CARD ═══ */}
+        <div className="w-full relative rounded-2xl overflow-hidden shrink-0"
           style={{
             background: 'rgba(255,255,255,0.025)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -391,8 +549,75 @@ export default function Login() {
             )}
 
           </div>
+        </div>{/* /card */}
+
+        {/* ═══ BOTTOM CHAMELEON — tail coils up from below ═══ */}
+        <div className="flex-1 flex items-start justify-center overflow-hidden min-h-0 pt-3 pointer-events-none">
+          <div
+            className={mode === 'register' ? 'ch-hide-down' : 'ch-show-down'}
+            style={{ willChange: 'transform, opacity' }}
+          >
+            <svg
+              width="180" height="190"
+              viewBox="0 0 200 195"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* ── Feet gripping the invisible bottom edge of the card ── */}
+              {/* Left foot — zygodactyl (2+2 toe groups) */}
+              <g fill="#166534" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round">
+                <line x1="55" y1="8" x2="38" y2="22"/>
+                <line x1="55" y1="8" x2="42" y2="28"/>
+                <line x1="55" y1="8" x2="68" y2="22"/>
+                <line x1="55" y1="8" x2="64" y2="28"/>
+                <circle cx="55" cy="8" r="5" fill="#15803d"/>
+              </g>
+              {/* Right foot */}
+              <g fill="#166534" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round">
+                <line x1="145" y1="8" x2="128" y2="22"/>
+                <line x1="145" y1="8" x2="132" y2="28"/>
+                <line x1="145" y1="8" x2="158" y2="22"/>
+                <line x1="145" y1="8" x2="154" y2="28"/>
+                <circle cx="145" cy="8" r="5" fill="#15803d"/>
+              </g>
+              {/* Lower legs */}
+              <line x1="55" y1="8" x2="70" y2="0" stroke="#15803d" strokeWidth="7" strokeLinecap="round"/>
+              <line x1="145" y1="8" x2="130" y2="0" stroke="#15803d" strokeWidth="7" strokeLinecap="round"/>
+
+              {/* ── Body stub (just below card) ── */}
+              <path d="M 72,0 C 72,12 75,18 80,22 C 85,25 90,27 100,27 C 110,27 115,25 120,22 C 125,18 128,12 128,0" fill="#166534" opacity="0.8"/>
+
+              {/* ── TAIL — coiled downward, slow swing ── */}
+              <g className="tail-swing">
+                {/* Main tail arc — first curl */}
+                <path
+                  d="M 100,28 C 95,50 70,65 55,90 C 38,118 45,145 65,158 C 82,170 105,165 115,150 C 128,132 120,112 105,105 C 92,99 80,108 85,120 C 89,130 100,132 105,125"
+                  stroke="#15803d" strokeWidth="11" fill="none" strokeLinecap="round" strokeLinejoin="round"
+                />
+                {/* Tail highlight spine */}
+                <path
+                  d="M 100,28 C 95,50 70,65 55,90 C 38,118 45,145 65,158 C 82,170 105,165 115,150 C 128,132 120,112 105,105 C 92,99 80,108 85,120 C 89,130 100,132 105,125"
+                  stroke="#22c55e" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"
+                />
+                {/* Scale rings along tail */}
+                {[0.15, 0.3, 0.45, 0.6, 0.75].map((t, i) => {
+                  // approximate points along the tail path
+                  const pts = [
+                    [94,40],[76,62],[57,88],[52,115],[68,147],[98,163],[113,145],[110,118],[93,108],[86,122]
+                  ];
+                  const idx = Math.floor(t * pts.length);
+                  const [x, y] = pts[Math.min(idx, pts.length-1)];
+                  return <ellipse key={i} cx={x} cy={y} rx={5 - i*0.5} ry={3 - i*0.3} fill="#22c55e" opacity={0.2}/>
+                })}
+              </g>
+
+              {/* Ambient glow */}
+              <ellipse cx="100" cy="10" rx="50" ry="8" fill="#22c55e" opacity="0.05"/>
+            </svg>
+          </div>
         </div>
-      </div>
+
+      </div>{/* /right column */}
 
     </div>
   );
