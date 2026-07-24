@@ -39,18 +39,27 @@ router.post('/guest', async (req, res) => {
 });
 
 // @route POST /api/auth/register
-// @desc Register an account with email/password
+// @desc Register an account with username/password (no email)
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: 'Please provide username, email, and password' });
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Please provide username and password' });
     }
 
-    let user = await User.findOne({ email });
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password needs to be at least 8 characters' });
+    }
+    
+    // Check for alphanumeric only to prevent spaces/special chars
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      return res.status(400).json({ message: 'Username needs to be unique, no spaces or special characters' });
+    }
+
+    let user = await User.findOne({ username, isGuest: { $ne: true } });
     if (user) {
-      return res.status(400).json({ message: 'User with this email already exists' });
+      return res.status(400).json({ message: 'Username is already taken' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -58,9 +67,9 @@ router.post('/register', async (req, res) => {
 
     user = new User({
       username,
-      email,
       passwordHash,
-      isGuest: false
+      isGuest: false,
+      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
     });
 
     await user.save();
@@ -73,13 +82,13 @@ router.post('/register', async (req, res) => {
 });
 
 // @route POST /api/auth/login
-// @desc Login with email/password
+// @desc Login with username/password
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user || user.isGuest) {
+    const user = await User.findOne({ username, isGuest: { $ne: true } });
+    if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
