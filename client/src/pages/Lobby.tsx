@@ -75,7 +75,7 @@ export default function Lobby() {
   };
 
   const randomizeAvatar = () => {
-    if (!socket || !user) return;
+    if (!socket || !user || !token) return;
     const seed = Math.random().toString(36).substring(7);
     socket.emit('user:updateAvatar', { seed }, (response: any) => {
       if (response.success) {
