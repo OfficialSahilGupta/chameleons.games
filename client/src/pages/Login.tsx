@@ -135,8 +135,9 @@ export default function Login() {
       {/* Top Header */}
       <div className="absolute top-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
         <div className="ml-6 md:ml-12 flex items-center drop-shadow-[0_0_10px_rgba(52,211,153,0.4)] group cursor-pointer relative">
+          
           {/* The Chameleon 'C' */}
-          <svg viewBox="0 0 100 100" className="w-9 h-9 -mr-[2px] -mt-1 z-10 text-green-400 animate-camouflage transform group-hover:-translate-y-1 transition-transform duration-300" fill="currentColor" style={{ filter: 'brightness(1.1)' }}>
+          <svg viewBox="0 0 100 100" className="w-9 h-9 -mr-[2px] -mt-1 z-20 text-green-400 animate-camouflage transform group-hover:-translate-y-1 transition-transform duration-300" fill="currentColor" style={{ filter: 'brightness(1.1)' }}>
             {/* Body & Tail (forming the C) */}
             <path d="M 85,25 C 50,5 15,10 10,50 C 5,85 40,95 70,85 C 85,80 90,65 75,60 C 60,55 50,65 55,75 C 60,80 70,80 70,75" fill="none" stroke="currentColor" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
             {/* Head */}
@@ -146,15 +147,30 @@ export default function Login() {
             <circle cx="89" cy="18" r="1.5" fill="currentColor" className="animate-[pulse_2s_ease-in-out_infinite]" />
             {/* Legs */}
             <path d="M 35,20 L 25,35 M 60,12 L 65,30" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-            {/* Tongue */}
-            <path d="M 98,20 C 110,25 110,35 100,40" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <circle cx="100" cy="40" r="2" fill="currentColor" className="opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </svg>
-          
-          {/* The rest of the word */}
-          <div className="font-black text-2xl tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 animate-camouflage">
+
+          {/* The Long Shooting Tongue (hidden normally, scales out on hover) */}
+          <div className="absolute left-[30px] top-[10px] w-[185px] h-[3px] bg-green-400 rounded-full origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-[400ms] ease-out z-10 animate-camouflage" />
+          {/* The Sticky Tongue Tip */}
+          <div className="absolute left-[215px] top-[8.5px] w-[8px] h-[6px] bg-green-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-[300ms] z-10 animate-camouflage" />
+
+          {/* The rest of the word with a scaly texture */}
+          <div 
+            className="font-black text-2xl tracking-[0.2em] text-transparent bg-clip-text animate-camouflage z-30"
+            style={{
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'12\' height=\'12\' viewBox=\'0 0 12 12\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M6 0a6 6 0 0 0-6 6 6 6 0 0 0 6 6 6 6 0 0 0 6-6 6 6 0 0 0-6-6zm0 1.5a4.5 4.5 0 0 1 4.5 4.5 4.5 4.5 0 0 1-4.5 4.5 4.5 4.5 0 0 1-4.5-4.5 4.5 4.5 0 0 1 4.5-4.5z\' fill=\'%23ffffff\' fill-opacity=\'0.15\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(to right, #4ade80, #60a5fa, #a855f7)'
+            }}
+          >
             HAMELEONS
           </div>
+
+          {/* The Target Fly (buzzing around at the end, disappears when eaten) */}
+          <svg className="absolute -right-6 top-1.5 w-4 h-4 text-gray-400 animate-pulse group-hover:opacity-0 transition-opacity duration-75 delay-[350ms]" viewBox="0 0 24 24">
+            <path d="M12 10c-3-4-7-6-9-4 1 3 5 5 9 4z" fill="white" opacity="0.6"/>
+            <path d="M12 10c3-4 7-6 9-4-1 3-5 5-9 4z" fill="white" opacity="0.6"/>
+            <ellipse cx="12" cy="14" rx="2" ry="4" fill="currentColor"/>
+          </svg>
+
         </div>
         <div className="flex gap-4 pointer-events-auto">
           <button 
