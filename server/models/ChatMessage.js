@@ -15,7 +15,11 @@ const ChatMessageSchema = new mongoose.Schema({
     messageId: { type: String },
     username: { type: String },
     text: { type: String }
-  }
+  },
+  reactions: [{
+    emoji: { type: String },
+    userIds: [{ type: String }]
+  }]
 });
 
 module.exports = mongoose.model('ChatMessage', ChatMessageSchema);

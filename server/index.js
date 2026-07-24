@@ -283,6 +283,15 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('chat:react', async ({ code, messageId, emoji }, callback) => {
+    try {
+      await chatService.toggleReaction(code, messageId, socket.user.id, emoji);
+      if (callback) callback({ success: true });
+    } catch (err) {
+      if (callback) callback({ success: false, message: err.message });
+    }
+  });
+
   socket.on('user:updateAvatar', async ({ seed }, callback) => {
     try {
       const User = require('./models/User');

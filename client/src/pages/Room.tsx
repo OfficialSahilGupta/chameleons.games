@@ -249,8 +249,14 @@ export default function Room() {
                             <div className="flex items-center gap-2 mt-2">
                               {isHost && !isPlayerHost && room.status === 'lobby' ? (
                                 <>
-                                  <button onClick={(e) => { e.stopPropagation(); handleKickPlayer(playerUserIdStr); }} className="text-[10px] bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 px-2 py-1 rounded transition-colors uppercase font-bold tracking-widest">Kick</button>
-                                  <button onClick={(e) => { e.stopPropagation(); handleTransferHost(playerUserIdStr); }} className="text-[10px] bg-yellow-500/20 hover:bg-yellow-500 text-yellow-400 hover:text-white border border-yellow-500/30 px-2 py-1 rounded transition-colors uppercase font-bold tracking-widest">Make Host</button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleKickPlayer(playerUserIdStr); }} className="text-[10px] bg-red-900/60 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 hover:border-red-500 px-3 py-1.5 rounded-lg transition-all shadow-[0_0_10px_rgba(239,68,68,0.2)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:scale-105 uppercase font-black tracking-widest flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    KICK
+                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleTransferHost(playerUserIdStr); }} className="text-[10px] bg-yellow-900/60 hover:bg-yellow-500 text-yellow-300 hover:text-black border border-yellow-500/30 hover:border-yellow-500 px-3 py-1.5 rounded-lg transition-all shadow-[0_0_10px_rgba(234,179,8,0.2)] hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] hover:scale-105 uppercase font-black tracking-widest flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                                    MAKE HOST
+                                  </button>
                                 </>
                               ) : (
                                 <span className="text-[9px] text-gray-500 tracking-widest uppercase">

@@ -66,6 +66,40 @@ class ChatService {
       this.io.to(`room:${roomCode}`).emit('room:notification', { text });
     }
   }
+
+  async toggleReaction(roomCode, messageId, userId, emoji) {
+    const msg = await ChatMessage.findById(messageId);
+    if (!msg) throw new Error('Message not found');
+
+    const reactionIndex = msg.reactions.findIndex(r => r.emoji === emoji);
+    if (reactionIndex > -1) {
+      const userIndex = msg.reactions[reactionIndex].userIds.indexOf(userId);
+      if (userIndex > -1) {
+        // User already reacted, so remove it
+        msg.reactions[reactionIndex].userIds.splice(userIndex, 1);
+        if (msg.reactions[reactionIndex].userIds.length === 0) {
+          msg.reactions.splice(reactionIndex, 1);
+        }
+      } else {
+        // User hasn't reacted with this emoji yet
+        msg.reactions[reactionIndex].userIds.push(userId);
+      }
+    } else {
+      // Emoji doesn't exist yet
+      msg.reactions.push({ emoji, userIds: [userId] });
+    }
+
+    await msg.save();
+
+    if (this.io) {
+      this.io.to(`room:${roomCode}`).emit('chat:reactionUpdated', {
+        messageId: msg._id,
+        reactions: msg.reactions
+      });
+    }
+
+    return msg;
+  }
 }
 
 module.exports = new ChatService();
